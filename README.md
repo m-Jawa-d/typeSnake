@@ -13,6 +13,8 @@ A minimalist typing speed test built with Next.js. Supports multiple modes, mood
 - **Themes** — multiple themes via CSS custom properties; light and dark supported
 - **Stats** — WPM, raw WPM, accuracy, correct/incorrect characters, time, words completed
 - **Multilingual** — language selector in Settings
+- **Multiplayer Racing** — real-time race mode with lobbies; create/join rooms and compete live (powered by Ably)
+- **History** — view past test results with dates and stats
 - All styling is inline styles + CSS variables — no Tailwind, no CSS modules
 
 ## Tech Stack
@@ -21,6 +23,7 @@ A minimalist typing speed test built with Next.js. Supports multiple modes, mood
 - [Zustand](https://zustand-demo.pmnd.rs/) — global state
 - [Framer Motion](https://www.framer.com/motion/) — transitions
 - [Lucide React](https://lucide.dev/) — icons
+- [Ably](https://ably.com/) — real-time multiplayer
 - JetBrains Mono (Google Fonts)
 
 ## Getting Started
@@ -49,15 +52,22 @@ npm run lint    # ESLint
 ```
 src/
   app/
-    globals.css       # CSS custom properties for all themes
-    page.js           # Root page, AnimatePresence orchestration
+    globals.css              # CSS custom properties for all themes
+    page.js                  # Root page, AnimatePresence orchestration
+    api/
+      ably-token/route.js    # Ably token request endpoint
   components/
-    TypingTest.jsx    # Core typing UI, caret, keyboard input
-    ConfigBar.jsx     # Mode/time/word-count chips
-    Settings.jsx      # Language, mood, theme modal
-    Results.jsx       # Post-test stats screen
+    TypingTest.jsx           # Core typing UI, caret, keyboard input
+    ConfigBar.jsx            # Mode/time/word-count chips
+    Settings.jsx             # Language, mood, theme modal
+    Results.jsx              # Post-test stats screen
+    History.jsx              # Past results viewer
+    MultiplayerLobby.jsx     # Create/join room UI
+    RaceView.jsx             # Live racing UI
+    RaceResults.jsx          # Post-race leaderboard
   store/
-    gameStore.js      # Zustand store — all game state and logic
+    gameStore.js             # Zustand store — single-player game state
+    multiplayerStore.js      # Zustand store — multiplayer race state
 ```
 
 ## Contributing
