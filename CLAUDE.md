@@ -15,37 +15,42 @@ No test suite is configured.
 
 ## Architecture
 
-This is a Next.js 14 App Router project (JavaScript, no TypeScript) styled entirely with inline styles — there are no CSS modules or Tailwind classes. All theming is done via CSS custom properties defined in [src/app/globals.css](src/app/globals.css).
+Next.js 14 App Router project (JavaScript, no TypeScript). All styling is inline styles only — no CSS modules, no Tailwind. Theming is entirely via CSS custom properties on `[data-theme="..."]` selectors in [src/app/globals.css](src/app/globals.css); the active theme is set on `document.documentElement` in [src/app/page.js](src/app/page.js). Font is JetBrains Mono loaded from Google Fonts.
 
 ### State: Zustand store ([src/store/gameStore.js](src/store/gameStore.js))
 
-Single store drives the entire game. Key concepts:
+Single store drives the entire game. Key fields:
 
 - **`status`**: `'idle' | 'active' | 'finished'` — transitions on first keypress, timer end, or word completion.
-- **`mode`**: `'time'` (countdown, infinite words) or `'words'` (fixed word count, no timer).
+- **`mode`**: `'time'` (countdown, infinite words) | `'words'` (fixed count, no timer) | `'quote'` | `'story'`.
+- **`mood`**: `'happy' | 'sad' | 'anger' | 'joy' | 'calm'` — selects which word pool, quote list, and story list `initTest` draws from. Mood pools are defined at the top of the file as `MOOD_WORD_POOLS`, `MOOD_QUOTES`, `MOOD_STORIES`. If no mood matches, falls back to the standard `WORD_POOLS` / `QUOTES` / `STORIES`.
 - **`wordStates`**: parallel array to `words`; each entry is an array of `'correct' | 'incorrect' | 'extra' | null` per letter.
-- **`typedWords`**: what the user has actually typed per word slot.
-- In `time` mode, words are generated in batches of 80 initially, then 40 more appended when within 10 words of the end — this is the infinite scroll mechanism.
-- `_recalcStats()` is private (convention only) and recalculates WPM/accuracy from scratch on every keypress and tick — spaces between words count as 1 correct character.
+- **`typedWords`**: what the user has actually typed per word slot (including the word in progress).
+- In `time` mode, words are generated in batches of 80, then 40 more appended when within 10 words of the end. The infinite-scroll word generation also respects the active mood pool.
+- `_recalcStats()` recalculates WPM/accuracy from scratch on every keypress and tick — spaces between words count as 1 correct character.
+- `theme` and `language` are persisted to `localStorage`; `mood` is not.
 
 ### Components
 
-- **[TypingTest.jsx](src/components/TypingTest.jsx)** — the core UI. Captures all keyboard input via a `window` keydown listener (not the hidden `<input>`). The hidden `<input>` exists solely to track focus state for the blur overlay. Caret position is computed by measuring DOM `getBoundingClientRect()` on individual letter `<span>`s. Line scrolling is CSS `translateY` driven by a `scrollLines` counter incremented when the caret exceeds 1.8× the line height.
-- **[ConfigBar.jsx](src/components/ConfigBar.jsx)** — mode/option selector chips, fades out when `focused && active`.
-- **[Results.jsx](src/components/Results.jsx)** — shown when `status === 'finished'`; Tab/Enter restart.
+- **[TypingTest.jsx](src/components/TypingTest.jsx)** — core typing UI. Keyboard input is captured via a `window` keydown listener (not the hidden `<input>`). The hidden `<input>` exists only for focus tracking (blur overlay). Caret position is computed with `getBoundingClientRect()` on individual `[data-letter]` spans. Line scrolling is CSS `translateY` driven by `scrollLines`, incremented whenever the caret top exceeds `lineHeight * 1.8`. Timer interval is started/cleared in a `useEffect` watching `status`, `mode`, and `isFocused` — the timer only ticks while the test area is focused.
+- **[ConfigBar.jsx](src/components/ConfigBar.jsx)** — mode chips (time / words / quote / story) plus time/word-count sub-options. Fades out when `focused && active`. Mood is not shown here — it lives in Settings.
+- **[Settings.jsx](src/components/Settings.jsx)** — modal with language selector, mood selector (5 buttons with lucide-react icons, no emoji), and theme grid. Uses `framer-motion` for enter/exit animation. Mood icons: Smile → happy, Frown → sad, Flame → anger, Zap → joy, Wind → calm.
+- **[Results.jsx](src/components/Results.jsx)** — shown when `status === 'finished'`; displays wpm, accuracy, raw wpm, correct/errors, time, words completed. Tab/Enter triggers restart.
 
 ### Page ([src/app/page.js](src/app/page.js))
 
-Uses `AnimatePresence` from framer-motion to cross-fade between the test view and results view based on `status`. Header and footer fade out when the user is actively typing (focus + active state propagated up via `onFocusChange` callback).
+`AnimatePresence` cross-fades between the test view (`ConfigBar` + `TypingTest`) and `Results` based on `status`. Header and footer fade out when the user is actively typing (focus + active state via `onFocusChange` callback). Settings modal is mounted/unmounted via a second `AnimatePresence`.
 
 ### Design tokens (CSS variables)
 
 | Variable | Purpose |
 |---|---|
-| `--bg` | Page background (#323437) |
-| `--main` | Accent/caret/highlight (#e2b714 yellow) |
-| `--text` | Correctly typed letters |
-| `--sub` | Untyped letters, hints |
-| `--sub-alt` | Chip backgrounds |
-| `--error` | Incorrect letters, error underline |
+| `--bg` | Page background |
+| `--main` | Accent / caret / active chip highlight |
+| `--text` | Correctly typed letters, primary text |
+| `--sub` | Untyped letters, secondary hints |
+| `--sub-alt` | Chip/button backgrounds, dividers |
+| `--error` | Incorrect letters, error underline on completed words |
 | `--error-extra` | Extra characters beyond word length |
+| `--font` | JetBrains Mono stack |
+| `--transition` | `0.1s ease` — used for color transitions throughout |

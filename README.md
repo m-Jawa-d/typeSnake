@@ -1,89 +1,101 @@
-# Typing Test App
+# Typing Test
 
-Welcome to the Typing Test App! This is a simple typing test application built with Next.js and React. The app presents a series of words for users to type, measures typing speed (WPM), and provides options to restart or stop the test.
+A minimalist typing speed test built with Next.js. Supports multiple modes, mood-based word pools, themes, and multilingual input.
+
+**Live demo:** [react-nextjs-typing.vercel.app](https://react-nextjs-typing.vercel.app/)
+
+---
 
 ## Features
 
-- Presents a variety of words for typing practice
-- Measures and displays typing speed in words per minute (WPM)
-- Allows users to restart or stop the typing test
-- Clean and responsive UI
+- **Modes** — `time` (countdown with infinite words), `words` (fixed count), `quote`, `story`
+- **Moods** — happy / sad / anger / joy / calm, each with its own word pool, quotes, and stories
+- **Themes** — multiple themes via CSS custom properties; light and dark supported
+- **Stats** — WPM, raw WPM, accuracy, correct/incorrect characters, time, words completed
+- **Multilingual** — language selector in Settings
+- All styling is inline styles + CSS variables — no Tailwind, no CSS modules
 
-## Demo
+## Tech Stack
 
-Check out the live demo of the Typing Test App: [Typing Test Demo](https://react-nextjs-typing.vercel.app/)
+- [Next.js 14](https://nextjs.org/) (App Router, JavaScript)
+- [Zustand](https://zustand-demo.pmnd.rs/) — global state
+- [Framer Motion](https://www.framer.com/motion/) — transitions
+- [Lucide React](https://lucide.dev/) — icons
+- JetBrains Mono (Google Fonts)
 
 ## Getting Started
 
-Follow these steps to get a local copy of the project up and running on your machine.
+**Prerequisites:** Node.js ≥ 18, npm ≥ 9
 
-### Prerequisites
+```bash
+git clone https://github.com/m-Jawa-d/react-nextjs-typing.git
+cd react-nextjs-typing
+npm install
+npm run dev
+```
 
-Make sure you have the following installed:
+Open [http://localhost:3000](http://localhost:3000).
 
-- Node.js (>=14.x)
-- npm (>=6.x)
+### Other commands
 
-### Installation
+```bash
+npm run build   # Production build
+npm run start   # Serve production build
+npm run lint    # ESLint
+```
 
-1. Clone the repository:
+## Project Structure
 
-    ```bash
-    git clone https://github.com/m-Jawa-d/react-nextjs-typing.git
-    ```
-
-2. Navigate to the project directory:
-
-    ```bash
-    cd typing-test-app
-    ```
-
-3. Install the dependencies:
-
-    ```bash
-    npm install
-    ```
-
-4. Start the development server:
-
-    ```bash
-    npm run dev
-    ```
-
-5. Open your browser and visit `http://localhost:3000` to see the app in action.
-
-## Usage
-
-- Start typing the words presented on the screen.
-- Your typing speed (WPM) will be calculated and displayed.
-- Use the "Restart Test" button to restart the test at any time.
-- Use the "Stop Test" button to stop the test.
+```
+src/
+  app/
+    globals.css       # CSS custom properties for all themes
+    page.js           # Root page, AnimatePresence orchestration
+  components/
+    TypingTest.jsx    # Core typing UI, caret, keyboard input
+    ConfigBar.jsx     # Mode/time/word-count chips
+    Settings.jsx      # Language, mood, theme modal
+    Results.jsx       # Post-test stats screen
+  store/
+    gameStore.js      # Zustand store — all game state and logic
+```
 
 ## Contributing
 
-I welcome contributions to enhance this project! Here are some ways you can contribute:
+Contributions are welcome — bug fixes, new themes, new word pools, new languages, or UX improvements.
 
-- **Star the Repo**: If you find this project useful, please consider starring the repository.
-- **Submit Issues**: If you find any bugs or have suggestions for improvements, please create an issue.
-- **Pull Requests**: I welcome pull requests. Please fork the repository and create a new branch for your contribution. 
+### How to contribute
 
-### How to Contribute
+1. **Fork** the repository and clone your fork.
+2. **Create a branch** from `main`:
+   ```bash
+   git checkout -b feat/your-feature-name
+   ```
+3. **Make your changes.** A few conventions to follow:
+   - Inline styles only — no CSS utility classes or CSS modules.
+   - New themes go in [src/app/globals.css](src/app/globals.css) as `[data-theme="your-theme"]` blocks.
+   - New word pools go in [src/store/gameStore.js](src/store/gameStore.js) — see `MOOD_WORD_POOLS` for the pattern.
+   - No TypeScript — the project is plain JavaScript.
+4. **Commit** with a descriptive message (`feat:`, `fix:`, `chore:` prefixes are appreciated).
+5. **Push** your branch and open a **Pull Request** against `main`.
 
-1. Fork the repository.
-2. Create a new branch for your feature or bugfix.
-3. Make your changes.
-4. Commit your changes with a descriptive commit message.
-5. Push your changes to your forked repository.
-6. Create a pull request to merge your changes into the main repository.
+### Good first contributions
+
+- Add a new theme (see the `--bg`, `--main`, `--text`, `--sub`, `--sub-alt`, `--error`, `--error-extra` variables)
+- Add words for a new language
+- Add mood-specific word pools, quotes, or stories
+- Improve caret smoothness or scrolling behavior in [TypingTest.jsx](src/components/TypingTest.jsx)
+- Improve mobile/touch support
+
+### Reporting issues
+
+Open a [GitHub Issue](https://github.com/m-Jawa-d/react-nextjs-typing/issues) with steps to reproduce, expected vs. actual behavior, and your browser/OS.
 
 ## Contact
 
-If you have any questions or feedback, feel free to contact me at chudhryjawad@gmail.com.
+Questions or feedback: chudhryjawad@gmail.com
 
 ---
 
 ![Typing Test](https://github.com/m-Jawa-d/react-nextjs-typing/blob/main/public/one.png)
 ![Typing Test](https://github.com/m-Jawa-d/react-nextjs-typing/blob/main/public/two.png)
-
-Thank you for visiting the Typing Test App repository! I hope you find it useful and fun. Don't forget to ⭐ the repo and happy typing!
-

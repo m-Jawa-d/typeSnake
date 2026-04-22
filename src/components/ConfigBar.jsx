@@ -39,17 +39,22 @@ export default function ConfigBar({ focused }) {
     }}>
       <Chip active={mode === 'time'} onClick={() => setMode('time')}>time</Chip>
       <Chip active={mode === 'words'} onClick={() => setMode('words')}>words</Chip>
+      <Chip active={mode === 'quote'} onClick={() => setMode('quote')}>quote</Chip>
+      <Chip active={mode === 'story'} onClick={() => setMode('story')}>story</Chip>
 
-      <span style={{ color: 'var(--sub)', fontSize: '0.7rem' }}>/</span>
-
-      {mode === 'time'
-        ? [15, 30, 60, 120].map((t) => (
-            <Chip key={t} active={timeOption === t} onClick={() => setTimeOption(t)}>{t}</Chip>
-          ))
-        : [10, 25, 50, 100].map((w) => (
-            <Chip key={w} active={wordOption === w} onClick={() => setWordOption(w)}>{w}</Chip>
-          ))
-      }
+      {(mode === 'time' || mode === 'words') && (
+        <>
+          <span style={{ color: 'var(--sub)', fontSize: '0.7rem' }}>/</span>
+          {mode === 'time'
+            ? [15, 30, 60, 120].map((t) => (
+                <Chip key={t} active={timeOption === t} onClick={() => setTimeOption(t)}>{t}</Chip>
+              ))
+            : [10, 25, 50, 100].map((w) => (
+                <Chip key={w} active={wordOption === w} onClick={() => setWordOption(w)}>{w}</Chip>
+              ))
+          }
+        </>
+      )}
     </div>
   );
 }

@@ -8,7 +8,7 @@ export default function TypingTest({ onFocusChange }) {
   const {
     words, wordIndex, wordStates, typedWords,
     status, mode, timeRemaining, wordOption,
-    handleKey,
+    language, handleKey,
   } = useGameStore();
 
   const wordsRef = useRef(null);
@@ -26,11 +26,11 @@ export default function TypingTest({ onFocusChange }) {
   }, [isFocused, status, onFocusChange]);
 
   useEffect(() => {
-    if (status === 'active' && mode === 'time') {
+    if (status === 'active' && mode === 'time' && isFocused) {
       timerRef.current = setInterval(tickFn, 1000);
     }
     return () => clearInterval(timerRef.current);
-  }, [status, mode, tickFn]);
+  }, [status, mode, tickFn, isFocused]);
 
   const focusInput = useCallback(() => {
     hiddenInputRef.current?.focus();
@@ -95,7 +95,11 @@ export default function TypingTest({ onFocusChange }) {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [handleKey, focusInput]);
 
-  const timerDisplay = mode === 'time' ? timeRemaining : `${wordIndex} / ${wordOption}`;
+  const timerDisplay = mode === 'time'
+    ? timeRemaining
+    : mode === 'words'
+    ? `${wordIndex} / ${wordOption}`
+    : `${wordIndex} / ${words.length}`;
   const wrapperHeight = lineHeight > 0 ? lineHeight * LINES_VISIBLE : 150;
   const scrollOffset = lineHeight > 0 ? scrollLines * lineHeight : 0;
 
@@ -157,6 +161,7 @@ export default function TypingTest({ onFocusChange }) {
         {/* Scrolling words */}
         <div
           ref={wordsRef}
+          dir={language === 'urdu' ? 'rtl' : 'ltr'}
           style={{
             position: 'absolute',
             top: 0, left: 0, right: 0,

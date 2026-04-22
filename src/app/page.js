@@ -50,9 +50,9 @@ export default function Home() {
 
         <nav style={{ display: 'flex', gap: '1.25rem', alignItems: 'center' }}>
           {[
-            { label: 'leaderboard', Icon: Trophy, onClick: null },
+            // { label: 'leaderboard', Icon: Trophy, onClick: null },
             { label: 'settings', Icon: Settings, onClick: () => setSettingsOpen(true) },
-            { label: 'account', Icon: User, onClick: null },
+            // { label: 'account', Icon: User, onClick: null },
           ].map(({ label, Icon, onClick }) => (
             <button
               key={label}
