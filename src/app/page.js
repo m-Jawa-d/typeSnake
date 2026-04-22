@@ -1,19 +1,27 @@
 'use client';
 import { useCallback, useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Trophy, Settings, User, Globe, Info, BarChart3 } from 'lucide-react';
+import { Settings, Globe, Info, BarChart3, Swords } from 'lucide-react';
 import useGameStore from '../store/gameStore';
+import useMultiplayerStore from '../store/multiplayerStore';
 import ConfigBar from '../components/ConfigBar';
 import TypingTest from '../components/TypingTest';
 import Results from '../components/Results';
 import SettingsModal from '../components/Settings';
 import History from '../components/History';
+import MultiplayerLobby from '../components/MultiplayerLobby';
+import RaceView from '../components/RaceView';
+import RaceResults from '../components/RaceResults';
 
 export default function Home() {
   const { status, initTest, theme } = useGameStore();
+  const { mpStatus, startRace } = useMultiplayerStore();
   const [focused, setFocused] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [multiplayerOpen, setMultiplayerOpen] = useState(false);
+
+  const inMultiplayer = multiplayerOpen || ['lobby', 'countdown', 'racing', 'finished'].includes(mpStatus);
 
   useEffect(() => { initTest(); }, [initTest]);
 
@@ -52,6 +60,7 @@ export default function Home() {
 
         <nav style={{ display: 'flex', gap: '1.25rem', alignItems: 'center' }}>
           {[
+            { label: 'race', Icon: Swords, onClick: () => setMultiplayerOpen(true) },
             { label: 'history', Icon: BarChart3, onClick: () => setHistoryOpen(true) },
             { label: 'settings', Icon: Settings, onClick: () => setSettingsOpen(true) },
           ].map(({ label, Icon, onClick }) => (
@@ -62,7 +71,7 @@ export default function Home() {
               style={{
                 background: 'none',
                 border: 'none',
-                color: 'var(--sub)',
+                color: label === 'race' ? 'var(--main)' : 'var(--sub)',
                 cursor: 'pointer',
                 fontFamily: 'var(--font)',
                 transition: 'color var(--transition)',
@@ -73,7 +82,7 @@ export default function Home() {
                 fontSize: '0.75rem',
               }}
               onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--sub)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = label === 'race' ? 'var(--main)' : 'var(--sub)'; }}
             >
               <Icon size={14} strokeWidth={1.5} />
               {label}
@@ -91,7 +100,26 @@ export default function Home() {
         gap: '1.5rem',
       }}>
         <AnimatePresence mode="wait">
-          {status === 'finished' ? (
+          {inMultiplayer ? (
+            <motion.div
+              key="multiplayer"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              style={{ width: '100%', maxWidth: '900px' }}
+            >
+              {(mpStatus === 'idle' || mpStatus === 'lobby') && (
+                <MultiplayerLobby onBack={() => setMultiplayerOpen(false)} />
+              )}
+              {(mpStatus === 'countdown' || mpStatus === 'racing') && (
+                <RaceView />
+              )}
+              {mpStatus === 'finished' && (
+                <RaceResults onPlayAgain={startRace} />
+              )}
+            </motion.div>
+          ) : status === 'finished' ? (
             <motion.div
               key="results"
               initial={{ opacity: 0 }}
