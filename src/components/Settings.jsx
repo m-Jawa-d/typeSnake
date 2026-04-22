@@ -85,7 +85,7 @@ function ThemeGroup({ label, themes, activeTheme, onSelect }) {
     <div>
       <p style={{
         color: 'var(--text)',
-        opacity: 0.45,
+        opacity: 0.65,
         fontSize: '0.65rem',
         fontFamily: 'var(--font)',
         letterSpacing: '0.06em',
@@ -189,7 +189,7 @@ export default function Settings({ isOpen, onClose }) {
         <div>
           <p style={{
             color: 'var(--text)',
-            opacity: 0.45,
+            opacity: 0.65,
             fontSize: '0.65rem',
             fontFamily: 'var(--font)',
             letterSpacing: '0.06em',
@@ -207,7 +207,7 @@ export default function Settings({ isOpen, onClose }) {
                   onClick={() => setLanguage(lang.id)}
                   style={{
                     background: active ? 'var(--main)' : 'var(--sub-alt)',
-                    color: active ? 'var(--bg)' : 'var(--sub)',
+                    color: active ? 'var(--bg)' : 'var(--text)',
                     border: 'none',
                     borderRadius: '4px',
                     padding: '0.3rem 0.8rem',
@@ -216,8 +216,8 @@ export default function Settings({ isOpen, onClose }) {
                     cursor: 'pointer',
                     transition: 'background 0.12s ease, color 0.12s ease',
                   }}
-                  onMouseEnter={(e) => { if (!active) e.currentTarget.style.color = 'var(--text)'; }}
-                  onMouseLeave={(e) => { if (!active) e.currentTarget.style.color = 'var(--sub)'; }}
+                  onMouseEnter={(e) => { if (!active) e.currentTarget.style.opacity = '0.7'; }}
+                  onMouseLeave={(e) => { if (!active) e.currentTarget.style.opacity = '1'; }}
                 >
                   {lang.label}
                 </button>
@@ -233,7 +233,7 @@ export default function Settings({ isOpen, onClose }) {
         <div>
           <p style={{
             color: 'var(--text)',
-            opacity: 0.45,
+            opacity: 0.65,
             fontSize: '0.65rem',
             fontFamily: 'var(--font)',
             letterSpacing: '0.06em',
@@ -252,7 +252,7 @@ export default function Settings({ isOpen, onClose }) {
                   title={label}
                   style={{
                     background: active ? 'var(--main)' : 'var(--sub-alt)',
-                    color: active ? 'var(--bg)' : 'var(--sub)',
+                    color: active ? 'var(--bg)' : 'var(--text)',
                     border: 'none',
                     borderRadius: '4px',
                     padding: '0.3rem 0.7rem',
@@ -264,8 +264,8 @@ export default function Settings({ isOpen, onClose }) {
                     gap: '0.35rem',
                     transition: 'background 0.12s ease, color 0.12s ease',
                   }}
-                  onMouseEnter={(e) => { if (!active) e.currentTarget.style.color = 'var(--text)'; }}
-                  onMouseLeave={(e) => { if (!active) e.currentTarget.style.color = 'var(--sub)'; }}
+                  onMouseEnter={(e) => { if (!active) e.currentTarget.style.opacity = '0.7'; }}
+                  onMouseLeave={(e) => { if (!active) e.currentTarget.style.opacity = '1'; }}
                 >
                   <Icon size={13} strokeWidth={1.5} />
                   {label}
