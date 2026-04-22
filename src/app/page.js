@@ -1,17 +1,19 @@
 'use client';
 import { useCallback, useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Trophy, Settings, User, Globe, Info } from 'lucide-react';
+import { Trophy, Settings, User, Globe, Info, BarChart3 } from 'lucide-react';
 import useGameStore from '../store/gameStore';
 import ConfigBar from '../components/ConfigBar';
 import TypingTest from '../components/TypingTest';
 import Results from '../components/Results';
 import SettingsModal from '../components/Settings';
+import History from '../components/History';
 
 export default function Home() {
   const { status, initTest, theme } = useGameStore();
   const [focused, setFocused] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   useEffect(() => { initTest(); }, [initTest]);
 
@@ -50,9 +52,8 @@ export default function Home() {
 
         <nav style={{ display: 'flex', gap: '1.25rem', alignItems: 'center' }}>
           {[
-            // { label: 'leaderboard', Icon: Trophy, onClick: null },
+            { label: 'history', Icon: BarChart3, onClick: () => setHistoryOpen(true) },
             { label: 'settings', Icon: Settings, onClick: () => setSettingsOpen(true) },
-            // { label: 'account', Icon: User, onClick: null },
           ].map(({ label, Icon, onClick }) => (
             <button
               key={label}
@@ -169,6 +170,12 @@ export default function Home() {
       <AnimatePresence>
         {settingsOpen && (
           <SettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {historyOpen && (
+          <History onClose={() => setHistoryOpen(false)} />
         )}
       </AnimatePresence>
     </div>

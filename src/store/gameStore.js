@@ -131,8 +131,14 @@ const MOOD_STORIES = {
   ],
 };
 
-const WORD_POOLS = {
-  english: [
+const DIFFICULTY_POOLS = {
+  easy: [
+    'the','be','to','of','and','a','in','that','have','it','for','not','on','with','he','as','you',
+    'do','at','this','but','his','by','from','they','we','say','her','she','or','an','will','my',
+    'one','all','would','there','their','what','so','up','out','if','about','who','get','which',
+    'go','me','when','make','can','like','time','no','just','him','know','take','people','into',
+  ],
+  normal: [
     'the','be','to','of','and','a','in','that','have','it','for','not','on','with','he','as','you',
     'do','at','this','but','his','by','from','they','we','say','her','she','or','an','will','my',
     'one','all','would','there','their','what','so','up','out','if','about','who','get','which',
@@ -147,6 +153,25 @@ const WORD_POOLS = {
     'got','group','run','important','until','children','side','feet','car','mile','walk',
     'white','sea','began','grow','took','river','four','carry','state','once','book','hear','stop','without',
   ],
+  hard: [
+    'year','your','good','some','could','them','see','other','than','then','now','look','only',
+    'come','its','over','think','also','back','after','use','two','how','our','work','first','well',
+    'way','even','new','want','because','any','these','give','day','most','us','great','between',
+    'need','large','often','hand','high','place','hold','turn','been','same','tell','does','set',
+    'three','air','play','small','number','off','always','move','night','live','point','city',
+    'thought','head','under','story','saw','left','few','while','along','might','close','something',
+    'seem','next','hard','open','real','example','begin','life','those','both','paper','together',
+    'got','group','run','important','until','children','side','feet','car','mile','walk',
+    'white','sea','began','grow','took','river','four','carry','state','once','book','hear','stop','without',
+    'language','perhaps','together','quality','science','question','important','interest','morning','different',
+    'knowledge','believe','possible','government','business','experience','treatment','management','development','throughout',
+    'understand','especially','particular','university','production','performance','structure','president','attention','agreement',
+    'situation','education','discussion','information','organization','recognition','throughout','authority','generation','environment',
+  ],
+};
+
+const WORD_POOLS = {
+  english: DIFFICULTY_POOLS.normal,
   urdu: [
     'ہے','کہ','اور','کی','میں','کو','نہیں','سے','ہو','ایک','یہ','بھی','پر','نے','آپ',
     'ہم','وہ','تو','کیا','اس','جو','لیے','ہیں','آ','جب','اب','ان','اپنے','تھا','تھی',
@@ -159,8 +184,13 @@ const WORD_POOLS = {
   ],
 };
 
-function generateWords(count, language = 'english') {
-  const pool = WORD_POOLS[language] ?? WORD_POOLS.english;
+function generateWords(count, language = 'english', difficulty = 'normal') {
+  let pool;
+  if (language === 'urdu') {
+    pool = WORD_POOLS.urdu;
+  } else {
+    pool = DIFFICULTY_POOLS[difficulty] ?? DIFFICULTY_POOLS.normal;
+  }
   const words = [];
   for (let i = 0; i < count; i++) {
     words.push(pool[Math.floor(Math.random() * pool.length)]);
@@ -176,10 +206,20 @@ function textToWords(text) {
   return text.split(' ');
 }
 
+function loadHistory() {
+  if (typeof window === 'undefined') return [];
+  try {
+    return JSON.parse(localStorage.getItem('history') || '[]');
+  } catch {
+    return [];
+  }
+}
+
 const useGameStore = create((set, get) => ({
   // Config
   mode: 'time',           // 'time' | 'words' | 'quote' | 'story'
   mood: 'happy',          // 'happy' | 'sad' | 'anger' | 'joy' | 'calm'
+  difficulty: 'normal',   // 'easy' | 'normal' | 'hard'
   timeOption: 30,         // 15 | 30 | 60 | 120
   wordOption: 25,         // 10 | 25 | 50 | 100
   language: (() => {
@@ -191,6 +231,9 @@ const useGameStore = create((set, get) => ({
     const stored = typeof window !== 'undefined' ? localStorage.getItem('theme') : null;
     return VALID.includes(stored) ? stored : 'paper';
   })(),
+
+  // History
+  history: loadHistory(),
 
   // Game state
   status: 'idle',         // 'idle' | 'active' | 'finished'
@@ -246,8 +289,13 @@ const useGameStore = create((set, get) => ({
     get().initTest();
   },
 
+  setDifficulty: (difficulty) => {
+    set({ difficulty, status: 'idle', results: null });
+    get().initTest();
+  },
+
   initTest: () => {
-    const { mode, timeOption, wordOption, language, mood } = get();
+    const { mode, timeOption, wordOption, language, mood, difficulty } = get();
     let words;
     if (mode === 'quote') {
       const pool = mood && MOOD_QUOTES[mood] ? MOOD_QUOTES[mood] : QUOTES;
@@ -263,7 +311,7 @@ const useGameStore = create((set, get) => ({
       words = result;
     } else {
       const count = mode === 'time' ? 80 : wordOption;
-      words = generateWords(count, language);
+      words = generateWords(count, language, difficulty);
     }
     set({
       words,
@@ -343,10 +391,10 @@ const useGameStore = create((set, get) => ({
 
       // In time mode: if we hit the end of generated words, generate more
       if (mode === 'time' && nextIndex >= words.length - 10) {
-        const { mood: currentMood } = get();
+        const { mood: currentMood, difficulty: currentDifficulty } = get();
         const moreWords = currentMood && MOOD_WORD_POOLS[currentMood]
           ? (() => { const p = MOOD_WORD_POOLS[currentMood]; return Array.from({ length: 40 }, () => p[Math.floor(Math.random() * p.length)]); })()
-          : generateWords(40, get().language);
+          : generateWords(40, get().language, currentDifficulty);
         const newWords = [...words, ...moreWords];
         set({
           words: newWords,
@@ -445,7 +493,7 @@ const useGameStore = create((set, get) => ({
   },
 
   finishTest: () => {
-    const { wordIndex, startTime, mode, timeOption } = get();
+    const { wordIndex, startTime, mode, timeOption, mood, difficulty, history } = get();
 
     get()._recalcStats();
     const finalState = get();
@@ -453,20 +501,32 @@ const useGameStore = create((set, get) => ({
     const elapsed = startTime ? Math.round((Date.now() - startTime) / 1000) : 0;
     const wordsCompleted = wordIndex;
 
-    set({
-      status: 'finished',
-      results: {
-        wpm: finalState.wpm,
-        rawWpm: finalState.rawWpm,
-        accuracy: finalState.accuracy,
-        correct: finalState.correctChars,
-        incorrect: finalState.incorrectChars,
-        time: mode === 'time' ? timeOption : elapsed,
-        wordsTotal: get().words.length,
-        wordsCompleted,
-        mode,
-      },
-    });
+    const entry = {
+      wpm: finalState.wpm,
+      rawWpm: finalState.rawWpm,
+      accuracy: finalState.accuracy,
+      correct: finalState.correctChars,
+      incorrect: finalState.incorrectChars,
+      time: mode === 'time' ? timeOption : elapsed,
+      wordsTotal: get().words.length,
+      wordsCompleted,
+      mode,
+      mood,
+      difficulty,
+      date: Date.now(),
+    };
+
+    const newHistory = [entry, ...history].slice(0, 100);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('history', JSON.stringify(newHistory));
+    }
+
+    set({ status: 'finished', results: entry, history: newHistory });
+  },
+
+  clearHistory: () => {
+    if (typeof window !== 'undefined') localStorage.removeItem('history');
+    set({ history: [] });
   },
 
   restart: () => {
