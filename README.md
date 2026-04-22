@@ -2,7 +2,7 @@
 
 A minimalist typing speed test built with Next.js. Supports multiple modes, mood-based word pools, themes, and multilingual input.
 
-**Live demo:** [react-nextjs-typing.vercel.app](https://react-nextjs-typing.vercel.app/)
+**Live demo:** [keyflow.vercel.app](https://keyflow.vercel.app/)
 
 ---
 
@@ -28,8 +28,8 @@ A minimalist typing speed test built with Next.js. Supports multiple modes, mood
 **Prerequisites:** Node.js ≥ 18, npm ≥ 9
 
 ```bash
-git clone https://github.com/m-Jawa-d/react-nextjs-typing.git
-cd react-nextjs-typing
+git clone https://github.com/m-Jawa-d/keyflow.git
+cd keyflow
 npm install
 npm run dev
 ```
@@ -89,7 +89,7 @@ Contributions are welcome — bug fixes, new themes, new word pools, new languag
 
 ### Reporting issues
 
-Open a [GitHub Issue](https://github.com/m-Jawa-d/react-nextjs-typing/issues) with steps to reproduce, expected vs. actual behavior, and your browser/OS.
+Open a [GitHub Issue](https://github.com/m-Jawa-d/keyflow/issues) with steps to reproduce, expected vs. actual behavior, and your browser/OS.
 
 ## Contact
 
@@ -97,5 +97,5 @@ Questions or feedback: chudhryjawad@gmail.com
 
 ---
 
-![Typing Test](https://github.com/m-Jawa-d/react-nextjs-typing/blob/main/public/one.png)
-![Typing Test](https://github.com/m-Jawa-d/react-nextjs-typing/blob/main/public/two.png)
+![Typing Test](https://github.com/m-Jawa-d/keyflow/blob/main/public/one.png)
+![Typing Test](https://github.com/m-Jawa-d/keyflow/blob/main/public/two.png)

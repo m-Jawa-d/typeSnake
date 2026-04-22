@@ -133,31 +133,36 @@ export default function Home() {
         pointerEvents: focused ? 'none' : 'auto',
       }}>
         {[
-          { label: 'github', Icon: Globe },
-          { label: 'about', Icon: Info },
-        ].map(({ label, Icon }) => (
-          <button
+          { label: 'github', Icon: Globe, href: 'https://github.com/m-Jawa-d/keyflow' },
+          { label: 'about', Icon: Info, href: null },
+        ].map(({ label, Icon, href }) => (
+          <a
             key={label}
+            href={href}
+            target={href ? '_blank' : undefined}
+            rel={href ? 'noopener noreferrer' : undefined}
             title={label}
             style={{
               background: 'none',
               border: 'none',
               color: 'var(--sub)',
               fontSize: '0.7rem',
-              cursor: 'pointer',
+              cursor: href ? 'pointer' : 'default',
               fontFamily: 'var(--font)',
               transition: 'color var(--transition)',
               padding: 0,
               display: 'flex',
               alignItems: 'center',
               gap: '0.3rem',
+              textDecoration: 'none',
+              pointerEvents: href ? 'auto' : 'none',
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--sub)'; }}
+            onMouseEnter={(e) => { if (href) e.currentTarget.style.color = 'var(--text)'; }}
+            onMouseLeave={(e) => { if (href) e.currentTarget.style.color = 'var(--sub)'; }}
           >
             <Icon size={13} strokeWidth={1.5} />
             {label}
-          </button>
+          </a>
         ))}
       </footer>
 
