@@ -95,7 +95,4 @@ Open a [GitHub Issue](https://github.com/m-Jawa-d/keyflows/issues) with steps to
 
 Questions or feedback: chudhryjawad@gmail.com
 
----
 
-![Typing Test](https://github.com/m-Jawa-d/keyflows/blob/main/public/one.png)
-![Typing Test](https://github.com/m-Jawa-d/keyflows/blob/main/public/two.png)
