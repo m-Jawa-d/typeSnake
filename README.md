@@ -2,7 +2,7 @@
 
 A minimalist typing speed test built with Next.js. Supports multiple modes, mood-based word pools, themes, and multilingual input.
 
-**Live demo:** [keyflow.vercel.app](https://keyflow.vercel.app/)
+**Live demo:** [keyflows.vercel.app](https://keyflows.vercel.app/)
 
 ---
 
@@ -89,7 +89,7 @@ Contributions are welcome — bug fixes, new themes, new word pools, new languag
 
 ### Reporting issues
 
-Open a [GitHub Issue](https://github.com/m-Jawa-d/keyflow/issues) with steps to reproduce, expected vs. actual behavior, and your browser/OS.
+Open a [GitHub Issue](https://github.com/m-Jawa-d/keyflows/issues) with steps to reproduce, expected vs. actual behavior, and your browser/OS.
 
 ## Contact
 
@@ -97,5 +97,5 @@ Questions or feedback: chudhryjawad@gmail.com
 
 ---
 
-![Typing Test](https://github.com/m-Jawa-d/keyflow/blob/main/public/one.png)
-![Typing Test](https://github.com/m-Jawa-d/keyflow/blob/main/public/two.png)
+![Typing Test](https://github.com/m-Jawa-d/keyflows/blob/main/public/one.png)
+![Typing Test](https://github.com/m-Jawa-d/keyflows/blob/main/public/two.png)
