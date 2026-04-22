@@ -2,14 +2,16 @@
 import { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import useGameStore from '../store/gameStore';
+import WpmGraph from './WpmGraph';
+import KeyboardHeatmap from './KeyboardHeatmap';
 
 function Stat({ label, value, large }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-      <div style={{ color: 'var(--sub)', fontSize: '0.7rem' }}>{label}</div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+      <div style={{ color: 'var(--sub)', fontSize: '0.7rem', letterSpacing: '0.04em' }}>{label}</div>
       <div style={{
         color: 'var(--text)',
-        fontSize: large ? '4rem' : '1.75rem',
+        fontSize: large ? '4.5rem' : '2rem',
         fontWeight: large ? 700 : 400,
         lineHeight: 1,
         fontVariantNumeric: 'tabular-nums',
@@ -20,19 +22,23 @@ function Stat({ label, value, large }) {
   );
 }
 
-function getBest(history, mode, timeOption, wordOption) {
-  const filtered = history.filter((h) => {
-    if (h.mode !== mode) return false;
-    if (mode === 'time') return h.time === timeOption;
-    if (mode === 'words') return h.wordsTotal === wordOption;
-    return true;
-  });
-  if (!filtered.length) return null;
-  return filtered.reduce((best, h) => (h.wpm > best.wpm ? h : best), filtered[0]);
+function Divider() {
+  return (
+    <div style={{
+      height: '1px',
+      background: 'var(--sub-alt)',
+      margin: '2.5rem 0',
+    }} />
+  );
 }
 
 export default function Results() {
-  const { results, restart, history, clearHistory, mode, timeOption, wordOption } = useGameStore();
+  const {
+    results, restart, history, clearHistory,
+    mode, timeOption, wordOption,
+    words, wordStates, language,
+    streak, personalBests,
+  } = useGameStore();
   const restartRef = useRef(null);
 
   useEffect(() => {
@@ -48,100 +54,76 @@ export default function Results() {
 
   if (!results) return null;
 
-  const { wpm, rawWpm, accuracy, correct, incorrect, time, wordsCompleted } = results;
-  const best = getBest(history, mode, timeOption, wordOption);
-  const isNewBest = best && best.date === results.date && history.length > 1;
+  const { wpm, rawWpm, accuracy, correct, incorrect, time, wordsCompleted, isNewPB, wpmTimeline } = results;
 
-  const recent = history.slice(0, 10);
+  const key = mode === 'time' ? `time_${timeOption}` : mode === 'words' ? `words_${wordOption}` : mode;
+  const pb = personalBests[key];
 
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 0.2 }}
+      transition={{ duration: 0.25 }}
       style={{ width: '100%', maxWidth: '900px', margin: '0 auto' }}
     >
-      {/* Primary stats */}
+      {/* Primary stats row */}
       <div style={{
         display: 'flex',
         alignItems: 'flex-end',
-        gap: '4rem',
-        marginBottom: '2.5rem',
+        gap: '5rem',
+        flexWrap: 'wrap',
       }}>
         <Stat label="wpm" value={wpm} large />
         <Stat label="accuracy" value={`${accuracy}%`} large />
-        {isNewBest && (
-          <div style={{
-            alignSelf: 'flex-end',
-            paddingBottom: '0.3rem',
-            color: 'var(--main)',
-            fontSize: '0.75rem',
-          }}>
-            new best
-          </div>
-        )}
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '0.5rem',
+          alignSelf: 'flex-end',
+          paddingBottom: '0.5rem',
+        }}>
+          {isNewPB && (
+            <div style={{ color: 'var(--main)', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.05em' }}>
+              new best
+            </div>
+          )}
+          {streak > 1 && (
+            <div style={{ color: 'var(--sub)', fontSize: '0.72rem' }}>
+              {streak} day streak
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Secondary stats */}
+      <Divider />
+
+      {/* Secondary stats row */}
       <div style={{
         display: 'flex',
-        gap: '3rem',
-        paddingTop: '1.25rem',
-        borderTop: '1px solid var(--sub-alt)',
-        marginBottom: '2.5rem',
+        gap: '4rem',
         flexWrap: 'wrap',
       }}>
         <Stat label="raw" value={rawWpm} />
         <Stat label="correct / errors" value={`${correct} / ${incorrect}`} />
         <Stat label="time" value={`${time}s`} />
         <Stat label="words" value={wordsCompleted} />
-        {best && (
-          <Stat label="best wpm" value={best.wpm} />
-        )}
+        {pb && <Stat label="best" value={pb.wpm} />}
       </div>
 
-      {/* Recent history */}
-      {recent.length > 1 && (
-        <div style={{ marginBottom: '2rem' }}>
-          <div style={{
-            color: 'var(--sub)',
-            fontSize: '0.7rem',
-            marginBottom: '0.75rem',
-            textTransform: 'lowercase',
-          }}>
-            last {recent.length} runs
-          </div>
-          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'flex-end' }}>
-            {recent.map((h, i) => {
-              const isCurrent = i === 0;
-              const maxWpm = Math.max(...recent.map((r) => r.wpm)) || 1;
-              const barHeight = Math.max(4, Math.round((h.wpm / maxWpm) * 48));
-              return (
-                <div
-                  key={h.date}
-                  title={`${h.wpm} wpm  ${h.accuracy}%  ${h.mode}`}
-                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem' }}
-                >
-                  <div style={{
-                    fontSize: '0.6rem',
-                    color: isCurrent ? 'var(--main)' : 'var(--sub)',
-                    fontVariantNumeric: 'tabular-nums',
-                  }}>
-                    {h.wpm}
-                  </div>
-                  <div style={{
-                    width: '20px',
-                    height: `${barHeight}px`,
-                    borderRadius: '3px',
-                    background: isCurrent ? 'var(--main)' : 'var(--sub-alt)',
-                    transition: 'background var(--transition)',
-                  }} />
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
+      <Divider />
+
+      {/* Graph + Heatmap side by side */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: wpmTimeline && wpmTimeline.length >= 2 ? '1fr 1fr' : '1fr',
+        gap: '4rem',
+        alignItems: 'start',
+      }}>
+        <WpmGraph timeline={wpmTimeline} />
+        <KeyboardHeatmap words={words} wordStates={wordStates} language={language} />
+      </div>
+
+      <Divider />
 
       {/* Restart */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
@@ -152,7 +134,7 @@ export default function Results() {
             background: 'none',
             border: 'none',
             color: 'var(--sub)',
-            fontSize: '0.75rem',
+            fontSize: '0.8rem',
             cursor: 'pointer',
             fontFamily: 'var(--font)',
             transition: 'color var(--transition)',
@@ -163,7 +145,7 @@ export default function Results() {
         >
           try again
         </button>
-        <span style={{ color: 'var(--sub)', fontSize: '0.65rem' }}>tab / enter</span>
+        <span style={{ color: 'var(--sub)', fontSize: '0.68rem' }}>tab / enter</span>
         {history.length > 0 && (
           <button
             onClick={clearHistory}
@@ -171,7 +153,7 @@ export default function Results() {
               background: 'none',
               border: 'none',
               color: 'var(--sub)',
-              fontSize: '0.65rem',
+              fontSize: '0.68rem',
               cursor: 'pointer',
               fontFamily: 'var(--font)',
               transition: 'color var(--transition)',

@@ -7,15 +7,24 @@ function makeRoomCode() {
   return Math.random().toString(36).slice(2, 6).toUpperCase();
 }
 
-// Shared word list for a race (30 common words, same for everyone in the room)
-function generateRaceWords() {
-  const pool = [
-    'the','be','to','of','and','a','in','that','have','it','for','not','on','with',
-    'he','as','you','do','at','this','but','his','by','from','they','we','say','her',
-    'she','or','an','will','my','one','all','would','there','their','what','so','up',
-    'out','if','about','who','get','which','go','me','when','make','can','like','time',
-    'no','just','him','know','take','people','into','year','good','some','could','them',
-  ];
+const RACE_POOL_ENGLISH = [
+  'the','be','to','of','and','a','in','that','have','it','for','not','on','with',
+  'he','as','you','do','at','this','but','his','by','from','they','we','say','her',
+  'she','or','an','will','my','one','all','would','there','their','what','so','up',
+  'out','if','about','who','get','which','go','me','when','make','can','like','time',
+  'no','just','him','know','take','people','into','year','good','some','could','them',
+];
+
+const RACE_POOL_URDU = [
+  'ہے','کہ','اور','کی','میں','کو','نہیں','سے','ہو','ایک','یہ','بھی','پر','نے','آپ',
+  'ہم','وہ','تو','کیا','اس','جو','لیے','ہیں','آ','جب','اب','ان','اپنے','تھا','تھی',
+  'کے','ہوا','کر','مجھے','تم','دیا','لیا','گیا','ہوں','رہا','ہاں','نہ','مگر','یا','بڑا',
+  'چھوٹا','اچھا','برا','پانی','گھر','راستہ','کام','وقت','دن','رات','دل','ہاتھ','پیر',
+  'سوچ','بات','نام','جگہ','دوست','لوگ','بچہ','باپ','ماں','بھائی','بہن','شہر','ملک',
+];
+
+function generateRaceWords(language = 'english') {
+  const pool = language === 'urdu' ? RACE_POOL_URDU : RACE_POOL_ENGLISH;
   const words = [];
   for (let i = 0; i < 30; i++) {
     words.push(pool[Math.floor(Math.random() * pool.length)]);
@@ -34,6 +43,7 @@ const useMultiplayerStore = create((set, get) => ({
   isHost: false,
   players: [],       // [{ id, name, progress, wpm, finished, finishTime }]
   raceWords: [],
+  language: 'english',
 
   // Local race state
   mpStatus: 'idle',  // 'idle' | 'lobby' | 'countdown' | 'racing' | 'finished'
@@ -54,10 +64,10 @@ const useMultiplayerStore = create((set, get) => ({
   },
 
   // Create a new room (host)
-  createRoom: async (playerName) => {
+  createRoom: async (playerName, language = 'english') => {
     await get().connect();
     const roomCode = makeRoomCode();
-    const raceWords = generateRaceWords();
+    const raceWords = generateRaceWords(language);
     const { ablyClient, clientId } = get();
 
     const channel = ablyClient.channels.get(`race:${roomCode}`);
@@ -75,6 +85,7 @@ const useMultiplayerStore = create((set, get) => ({
         raceWords: get().raceWords,
         players: get().players,
         hostId: clientId,
+        language: get().language,
       });
     });
 
@@ -97,7 +108,7 @@ const useMultiplayerStore = create((set, get) => ({
       get()._startCountdown();
     });
 
-    set({ channel, roomCode, isHost: true, raceWords, players: [me], mpStatus: 'lobby' });
+    set({ channel, roomCode, isHost: true, raceWords, language, players: [me], mpStatus: 'lobby' });
     channel.publish('player-joined', me);
   },
 
@@ -110,8 +121,8 @@ const useMultiplayerStore = create((set, get) => ({
     const me = { id: clientId, name: playerName, progress: 0, wpm: 0, finished: false, finishTime: null };
 
     channel.subscribe('room-state', (msg) => {
-      const { raceWords, players } = msg.data;
-      set({ raceWords, players });
+      const { raceWords, players, language } = msg.data;
+      set({ raceWords, players, ...(language && { language }) });
     });
 
     channel.subscribe('player-joined', (msg) => {
@@ -274,7 +285,7 @@ const useMultiplayerStore = create((set, get) => ({
     ablyClient?.close();
     set({
       ablyClient: null, channel: null, clientId: null,
-      roomCode: null, isHost: false, players: [], raceWords: [],
+      roomCode: null, isHost: false, players: [], raceWords: [], language: 'english',
       mpStatus: 'idle', countdown: 3, wordIndex: 0,
       typedWords: [], wordStates: [], startTime: null, wpm: 0, localFinished: false,
     });

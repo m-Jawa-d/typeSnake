@@ -55,17 +55,18 @@ export default function TypingTest({ onFocusChange }) {
     const letterEls = currentWordEl.querySelectorAll('[data-letter]');
     const typedLen = typedWords[wordIndex]?.length ?? 0;
 
+    const isRtl = language === 'urdu';
     let left, top;
     if (typedLen < letterEls.length) {
       const el = letterEls[typedLen];
       const r = el.getBoundingClientRect();
-      left = r.left - containerRect.left;
+      left = (isRtl ? r.right : r.left) - containerRect.left;
       top = r.top - containerRect.top;
     } else {
       const last = letterEls[letterEls.length - 1];
       if (last) {
         const r = last.getBoundingClientRect();
-        left = r.right - containerRect.left;
+        left = (isRtl ? r.left : r.right) - containerRect.left;
         top = r.top - containerRect.top;
       } else {
         left = wordRect.left - containerRect.left;
@@ -89,11 +90,29 @@ export default function TypingTest({ onFocusChange }) {
         focusInput();
         return;
       }
+      // On mobile, input events handle typing; skip printable chars from keydown
+      // to avoid double-processing. Let Backspace through since mobile fires it as keydown.
+      if (e.key === 'Backspace') {
+        handleKey('Backspace');
+        return;
+      }
+      if (e.key.length === 1) return; // handled by onInput
       handleKey(e.key);
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [handleKey, focusInput]);
+
+  const handleMobileInput = useCallback((e) => {
+    const input = e.currentTarget;
+    const val = input.value;
+    if (!val) return;
+    // Each character typed on mobile arrives here; process each one
+    for (const char of val) {
+      handleKey(char);
+    }
+    input.value = '';
+  }, [handleKey]);
 
   const timerDisplay = mode === 'time'
     ? timeRemaining
@@ -143,18 +162,21 @@ export default function TypingTest({ onFocusChange }) {
 
         {/* Unfocused overlay */}
         {!isFocused && (
-          <div style={{
-            position: 'absolute',
-            inset: 0,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 5,
-            backdropFilter: 'blur(4px)',
-            color: 'var(--sub)',
-            fontSize: '0.75rem',
-          }}>
-            click to focus
+          <div
+            onClick={focusInput}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 5,
+              backdropFilter: 'blur(4px)',
+              color: 'var(--sub)',
+              fontSize: '0.75rem',
+              cursor: 'text',
+            }}>
+            tap to focus
           </div>
         )}
 
@@ -162,6 +184,7 @@ export default function TypingTest({ onFocusChange }) {
         <div
           ref={wordsRef}
           dir={language === 'urdu' ? 'rtl' : 'ltr'}
+          data-language={language}
           style={{
             position: 'absolute',
             top: 0, left: 0, right: 0,
@@ -172,6 +195,7 @@ export default function TypingTest({ onFocusChange }) {
             alignContent: 'flex-start',
             rowGap: '0.5rem',
             columnGap: '0.6em',
+            ...(language === 'urdu' && { fontFamily: "var(--font-urdu, 'Noto Nastaliq Urdu', serif)", fontSize: '1.6rem', lineHeight: '2.5' }),
           }}
         >
           {words.map((word, wi) => {
@@ -189,8 +213,8 @@ export default function TypingTest({ onFocusChange }) {
                 data-word
                 style={{
                   display: 'inline-block',
-                  fontSize: '1.4rem',
-                  lineHeight: '1.75',
+                  fontSize: language === 'urdu' ? '1.6rem' : '1.4rem',
+                  lineHeight: language === 'urdu' ? '2.5' : '1.75',
                   borderBottom: hasError ? '1px solid var(--error)' : '1px solid transparent',
                   whiteSpace: 'nowrap',
                 }}
@@ -240,8 +264,12 @@ export default function TypingTest({ onFocusChange }) {
           ref={hiddenInputRef}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          style={{ position: 'absolute', opacity: 0, width: 0, height: 0, pointerEvents: 'none' }}
-          readOnly
+          onInput={handleMobileInput}
+          style={{ position: 'absolute', opacity: 0, width: '1px', height: '1px', pointerEvents: 'none' }}
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="none"
+          spellCheck={false}
           tabIndex={0}
         />
       </div>
@@ -251,8 +279,8 @@ export default function TypingTest({ onFocusChange }) {
         marginTop: '1rem',
         color: 'var(--sub)',
         fontSize: '0.7rem',
-        opacity: status === 'idle' ? 1 : 0,
-        transition: 'opacity var(--transition)',
+        opacity: status === 'idle' ? 1 : 0.2,
+        transition: 'opacity 0.3s ease',
         userSelect: 'none',
       }}>
         tab to reset

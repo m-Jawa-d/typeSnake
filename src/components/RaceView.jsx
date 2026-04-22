@@ -8,8 +8,9 @@ export default function RaceView() {
   const {
     raceWords, wordIndex, wordStates, typedWords,
     mpStatus, countdown, players, clientId, wpm,
-    handleRaceKey, leaveRoom,
+    handleRaceKey, leaveRoom, language,
   } = useMultiplayerStore();
+  const isUrdu = language === 'urdu';
 
   const wordsRef = useRef(null);
   const hiddenInputRef = useRef(null);
@@ -42,13 +43,13 @@ export default function RaceView() {
     if (typedLen < letterEls.length) {
       const el = letterEls[typedLen];
       const r = el.getBoundingClientRect();
-      left = r.left - containerRect.left;
+      left = (isUrdu ? r.right : r.left) - containerRect.left;
       top = r.top - containerRect.top;
     } else {
       const last = letterEls[letterEls.length - 1];
       if (last) {
         const r = last.getBoundingClientRect();
-        left = r.right - containerRect.left;
+        left = (isUrdu ? r.left : r.right) - containerRect.left;
         top = r.top - containerRect.top;
       } else {
         left = wordRect.left - containerRect.left;
@@ -196,6 +197,7 @@ export default function RaceView() {
 
         <div
           ref={wordsRef}
+          dir={isUrdu ? 'rtl' : 'ltr'}
           style={{
             position: 'absolute',
             top: 0, left: 0, right: 0,
@@ -206,6 +208,7 @@ export default function RaceView() {
             alignContent: 'flex-start',
             rowGap: '0.5rem',
             columnGap: '0.6em',
+            ...(isUrdu && { fontFamily: "var(--font-urdu, 'Noto Nastaliq Urdu', serif)" }),
           }}
         >
           {raceWords.map((word, wi) => {
@@ -223,8 +226,8 @@ export default function RaceView() {
                 data-word
                 style={{
                   display: 'inline-block',
-                  fontSize: '1.4rem',
-                  lineHeight: '1.75',
+                  fontSize: isUrdu ? '1.6rem' : '1.4rem',
+                  lineHeight: isUrdu ? '2.5' : '1.75',
                   borderBottom: hasError ? '1px solid var(--error)' : '1px solid transparent',
                   whiteSpace: 'nowrap',
                 }}

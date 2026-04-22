@@ -36,7 +36,7 @@ export default function Home() {
       minHeight: '100vh',
       display: 'flex',
       flexDirection: 'column',
-      padding: '2rem 3rem',
+      padding: 'clamp(1rem, 4vw, 2rem) clamp(1rem, 5vw, 3rem)',
       maxWidth: '1000px',
       margin: '0 auto',
     }}>

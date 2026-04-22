@@ -1,6 +1,8 @@
 'use client';
 import { useState } from 'react';
+import { Copy, Check, ClipboardPaste } from 'lucide-react';
 import useMultiplayerStore from '../store/multiplayerStore';
+import useGameStore from '../store/gameStore';
 
 const inputStyle = {
   background: 'var(--sub-alt)',
@@ -30,18 +32,26 @@ const btnStyle = (primary) => ({
 
 export default function MultiplayerLobby({ onBack }) {
   const { createRoom, joinRoom, mpStatus, roomCode, players, isHost, startRace, leaveRoom } = useMultiplayerStore();
+  const language = useGameStore((s) => s.language);
   const [tab, setTab] = useState('create'); // 'create' | 'join'
   const [name, setName] = useState('');
   const [joinCode, setJoinCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(roomCode);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
 
   const handleCreate = async () => {
     if (!name.trim()) { setError('enter your name'); return; }
     setLoading(true);
     setError('');
     try {
-      await createRoom(name.trim());
+      await createRoom(name.trim(), language);
     } catch {
       setError('failed to create room');
     }
@@ -72,16 +82,37 @@ export default function MultiplayerLobby({ onBack }) {
       <div style={{ width: '100%', maxWidth: '500px', margin: '0 auto' }}>
         <div style={{ marginBottom: '2rem' }}>
           <div style={{ color: 'var(--sub)', fontSize: '0.7rem', marginBottom: '0.4rem' }}>room code</div>
-          <div style={{
-            color: 'var(--main)',
-            fontSize: '2.5rem',
-            fontWeight: 700,
-            letterSpacing: '0.15em',
-          }}>
-            {roomCode}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div style={{
+              color: 'var(--main)',
+              fontSize: '2.5rem',
+              fontWeight: 700,
+              letterSpacing: '0.15em',
+            }}>
+              {roomCode}
+            </div>
+            <button
+              onClick={handleCopy}
+              title={copied ? 'copied!' : 'copy room code'}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: copied ? 'var(--main)' : 'var(--sub)',
+                cursor: 'pointer',
+                padding: '0.2rem',
+                display: 'flex',
+                alignItems: 'center',
+                transition: 'color 0.1s ease',
+              }}
+            >
+              {copied ? <Check size={16} /> : <Copy size={16} />}
+            </button>
           </div>
           <div style={{ color: 'var(--sub)', fontSize: '0.7rem', marginTop: '0.3rem' }}>
             share this code with your friends
+          </div>
+          <div style={{ color: 'var(--sub)', fontSize: '0.7rem', marginTop: '0.5rem' }}>
+            language: <span style={{ color: 'var(--text)' }}>{useMultiplayerStore.getState().language === 'urdu' ? 'اردو' : 'english'}</span>
           </div>
         </div>
 
@@ -171,14 +202,39 @@ export default function MultiplayerLobby({ onBack }) {
         />
 
         {tab === 'join' && (
-          <input
-            style={{ ...inputStyle, textTransform: 'uppercase', letterSpacing: '0.15em' }}
-            placeholder="room code"
-            value={joinCode}
-            onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-            maxLength={4}
-            onKeyDown={(e) => { if (e.key === 'Enter') handleJoin(); }}
-          />
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+            <input
+              style={{ ...inputStyle, textTransform: 'uppercase', letterSpacing: '0.15em', paddingRight: '2.5rem' }}
+              placeholder="room code"
+              value={joinCode}
+              onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+              maxLength={4}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleJoin(); }}
+            />
+            <button
+              onClick={async () => {
+                try {
+                  const text = await navigator.clipboard.readText();
+                  setJoinCode(text.toUpperCase().slice(0, 4));
+                } catch {}
+              }}
+              title="paste from clipboard"
+              style={{
+                position: 'absolute',
+                right: '0.6rem',
+                background: 'none',
+                border: 'none',
+                color: 'var(--sub)',
+                cursor: 'pointer',
+                padding: '0.2rem',
+                display: 'flex',
+                alignItems: 'center',
+                transition: 'color 0.1s ease',
+              }}
+            >
+              <ClipboardPaste size={14} />
+            </button>
+          </div>
         )}
 
         {error && (

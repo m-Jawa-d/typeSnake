@@ -1,6 +1,25 @@
 'use client';
 import { create } from 'zustand';
 
+const URDU_QUOTES = [
+  "بڑا وہ ہے جو اپنے آپ کو چھوٹا سمجھے۔",
+  "علم حاصل کرو چاہے چین جانا پڑے۔",
+  "محنت کا پھل میٹھا ہوتا ہے۔",
+  "وقت سے بڑی کوئی دولت نہیں۔",
+  "سچ بولنا سب سے بڑی بہادری ہے۔",
+  "کامیاب وہ ہے جو ناکامی سے نہ گھبرائے۔",
+  "انسان کی پہچان اس کے کردار سے ہوتی ہے۔",
+  "ہر مشکل کے پیچھے ایک آسانی ہے۔",
+  "صبر کا پھل میٹھا ہوتا ہے۔",
+  "اچھا دوست اچھی قسمت سے ملتا ہے۔",
+];
+
+const URDU_STORIES = [
+  "ایک بار ایک چھوٹے سے گاؤں میں ایک بوڑھا کسان رہتا تھا۔ اس کے تین بیٹے تھے جو ہمیشہ آپس میں لڑتے رہتے تھے۔ ایک دن کسان نے انہیں لکڑیوں کا ایک گٹھا دیا اور کہا کہ اسے توڑ کر دکھاؤ۔ کوئی نہ توڑ سکا۔ پھر اس نے لکڑیاں الگ الگ کیں اور آسانی سے توڑ دیں۔ اتحاد میں طاقت ہے۔",
+  "ایک زمانے میں ایک عقلمند بادشاہ تھا جو اپنی رعایا سے بہت محبت کرتا تھا۔ وہ ہر روز بھیس بدل کر بازار جاتا اور لوگوں کے حال جانتا۔ ایک دن اسے ایک بھوکے بچے کی آواز سنائی دی۔ وہ فوراً رک گیا اور اپنے پاس موجود کھانا اسے دے دیا۔ بادشاہ کی اصل عظمت اس کے دل کی نرمی میں تھی۔",
+  "پہاڑوں کے دامن میں ایک چھوٹا سا قصبہ آباد تھا۔ وہاں کے لوگ سادہ اور محنتی تھے۔ ہر صبح وہ اپنے کھیتوں میں جاتے اور شام کو واپس آتے۔ ان کی زندگی میں کوئی بڑی خوشی نہیں تھی لیکن سکون ضرور تھا۔ وہ جانتے تھے کہ سادہ زندگی ہی اصل خوشی ہے۔",
+];
+
 const STORIES = [
   "The sun dipped below the horizon, painting the sky in shades of orange and pink. A lone figure walked along the beach, footprints trailing behind in the wet sand. Waves crashed and retreated, erasing each mark as if the ocean wanted no record of the journey.",
   "She opened the old wooden box and found letters tied with a faded ribbon. Each envelope bore her grandmother's handwriting, careful and deliberate. She sat by the window and began to read, feeling the decades collapse between the pages.",
@@ -215,6 +234,42 @@ function loadHistory() {
   }
 }
 
+function loadPersonalBests() {
+  if (typeof window === 'undefined') return {};
+  try {
+    return JSON.parse(localStorage.getItem('personalBests') || '{}');
+  } catch {
+    return {};
+  }
+}
+
+function pbKey(mode, timeOption, wordOption) {
+  if (mode === 'time') return `time_${timeOption}`;
+  if (mode === 'words') return `words_${wordOption}`;
+  return mode;
+}
+
+function calcStreak(history) {
+  if (!history.length) return 0;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const days = new Set(history.map((h) => {
+    const d = new Date(h.date);
+    d.setHours(0, 0, 0, 0);
+    return d.getTime();
+  }));
+  let streak = 0;
+  const oneDay = 86400000;
+  let cursor = today.getTime();
+  // If no test today, check if yesterday was played (streak still alive)
+  if (!days.has(cursor)) cursor -= oneDay;
+  while (days.has(cursor)) {
+    streak++;
+    cursor -= oneDay;
+  }
+  return streak;
+}
+
 const useGameStore = create((set, get) => ({
   // Config
   mode: 'time',           // 'time' | 'words' | 'quote' | 'story'
@@ -235,6 +290,10 @@ const useGameStore = create((set, get) => ({
   // History
   history: loadHistory(),
 
+  // Personal bests: { [pbKey]: { wpm, accuracy, date } }
+  personalBests: loadPersonalBests(),
+  streak: calcStreak(loadHistory()),
+
   // Game state
   status: 'idle',         // 'idle' | 'active' | 'finished'
   words: [],              // array of target words
@@ -254,6 +313,12 @@ const useGameStore = create((set, get) => ({
   incorrectChars: 0,
   totalChars: 0,
 
+  // WPM recorded each second for the graph
+  wpmTimeline: [],
+
+  // Custom text mode
+  customText: '',
+
   // Results
   results: null,
 
@@ -261,6 +326,10 @@ const useGameStore = create((set, get) => ({
   setMode: (mode) => {
     set({ mode, status: 'idle', results: null });
     get().initTest();
+  },
+
+  setCustomText: (text) => {
+    set({ customText: text });
   },
 
   setTimeOption: (val) => {
@@ -295,14 +364,21 @@ const useGameStore = create((set, get) => ({
   },
 
   initTest: () => {
-    const { mode, timeOption, wordOption, language, mood, difficulty } = get();
+    const { mode, timeOption, wordOption, language, mood, difficulty, customText } = get();
     let words;
-    if (mode === 'quote') {
-      const pool = mood && MOOD_QUOTES[mood] ? MOOD_QUOTES[mood] : QUOTES;
+    if (mode === 'custom') {
+      const trimmed = customText.trim();
+      if (!trimmed) return; // don't init until text is confirmed
+      words = textToWords(trimmed);
+    } else if (mode === 'quote') {
+      const pool = language === 'urdu' ? URDU_QUOTES : (mood && MOOD_QUOTES[mood] ? MOOD_QUOTES[mood] : QUOTES);
       words = textToWords(pickRandom(pool));
     } else if (mode === 'story') {
-      const pool = mood && MOOD_STORIES[mood] ? MOOD_STORIES[mood] : STORIES;
+      const pool = language === 'urdu' ? URDU_STORIES : (mood && MOOD_STORIES[mood] ? MOOD_STORIES[mood] : STORIES);
       words = textToWords(pickRandom(pool));
+    } else if (language === 'urdu') {
+      const count = mode === 'time' ? 80 : wordOption;
+      words = generateWords(count, 'urdu', difficulty);
     } else if (mood && MOOD_WORD_POOLS[mood]) {
       const count = mode === 'time' ? 80 : wordOption;
       const pool = MOOD_WORD_POOLS[mood];
@@ -328,6 +404,7 @@ const useGameStore = create((set, get) => ({
       correctChars: 0,
       incorrectChars: 0,
       totalChars: 0,
+      wpmTimeline: [],
       results: null,
     });
   },
@@ -343,8 +420,12 @@ const useGameStore = create((set, get) => ({
     if (timeRemaining <= 1) {
       get().finishTest();
     } else {
-      set((s) => ({ timeRemaining: s.timeRemaining - 1 }));
       get()._recalcStats();
+      const currentWpm = get().wpm;
+      set((s) => ({
+        timeRemaining: s.timeRemaining - 1,
+        wpmTimeline: [...s.wpmTimeline, currentWpm],
+      }));
     }
   },
 
@@ -383,7 +464,7 @@ const useGameStore = create((set, get) => ({
         get().finishTest();
         return;
       }
-      if ((mode === 'quote' || mode === 'story') && nextIndex >= words.length) {
+      if ((mode === 'quote' || mode === 'story' || mode === 'custom') && nextIndex >= words.length) {
         set({ wordStates: newWordStates, wordIndex: nextIndex });
         get().finishTest();
         return;
@@ -391,10 +472,12 @@ const useGameStore = create((set, get) => ({
 
       // In time mode: if we hit the end of generated words, generate more
       if (mode === 'time' && nextIndex >= words.length - 10) {
-        const { mood: currentMood, difficulty: currentDifficulty } = get();
-        const moreWords = currentMood && MOOD_WORD_POOLS[currentMood]
+        const { mood: currentMood, difficulty: currentDifficulty, language: currentLang } = get();
+        const moreWords = currentLang === 'urdu'
+          ? generateWords(40, 'urdu', currentDifficulty)
+          : currentMood && MOOD_WORD_POOLS[currentMood]
           ? (() => { const p = MOOD_WORD_POOLS[currentMood]; return Array.from({ length: 40 }, () => p[Math.floor(Math.random() * p.length)]); })()
-          : generateWords(40, get().language, currentDifficulty);
+          : generateWords(40, currentLang, currentDifficulty);
         const newWords = [...words, ...moreWords];
         set({
           words: newWords,
@@ -405,6 +488,11 @@ const useGameStore = create((set, get) => ({
 
       set({ wordIndex: nextIndex, letterIndex: 0, wordStates: newWordStates });
       get()._recalcStats();
+      // Record wpm snapshot for non-time modes on each word completion
+      if (mode !== 'time') {
+        const snap = get().wpm;
+        set((s) => ({ wpmTimeline: [...s.wpmTimeline, snap] }));
+      }
       return;
     }
 
@@ -493,13 +581,16 @@ const useGameStore = create((set, get) => ({
   },
 
   finishTest: () => {
-    const { wordIndex, startTime, mode, timeOption, mood, difficulty, history } = get();
+    const { wordIndex, startTime, mode, timeOption, wordOption, mood, difficulty, history, personalBests, wpmTimeline } = get();
 
     get()._recalcStats();
     const finalState = get();
 
     const elapsed = startTime ? Math.round((Date.now() - startTime) / 1000) : 0;
     const wordsCompleted = wordIndex;
+
+    // Append final wpm to timeline
+    const finalTimeline = [...wpmTimeline, finalState.wpm];
 
     const entry = {
       wpm: finalState.wpm,
@@ -514,6 +605,7 @@ const useGameStore = create((set, get) => ({
       mood,
       difficulty,
       date: Date.now(),
+      wpmTimeline: finalTimeline,
     };
 
     const newHistory = [entry, ...history].slice(0, 100);
@@ -521,7 +613,29 @@ const useGameStore = create((set, get) => ({
       localStorage.setItem('history', JSON.stringify(newHistory));
     }
 
-    set({ status: 'finished', results: entry, history: newHistory });
+    // Update personal bests
+    const key = pbKey(mode, timeOption, wordOption);
+    const currentBest = personalBests[key];
+    let newPersonalBests = personalBests;
+    let isNewPB = false;
+    if (!currentBest || finalState.wpm > currentBest.wpm) {
+      isNewPB = true;
+      newPersonalBests = { ...personalBests, [key]: { wpm: finalState.wpm, accuracy: finalState.accuracy, date: entry.date } };
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('personalBests', JSON.stringify(newPersonalBests));
+      }
+    }
+
+    const newStreak = calcStreak(newHistory);
+
+    set({
+      status: 'finished',
+      results: { ...entry, isNewPB },
+      history: newHistory,
+      personalBests: newPersonalBests,
+      streak: newStreak,
+      wpmTimeline: finalTimeline,
+    });
   },
 
   clearHistory: () => {
