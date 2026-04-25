@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useRef, useCallback, useState } from 'react';
 import useGameStore from '../store/gameStore';
+import useSound from '../hooks/useSound';
 
 const LINES_VISIBLE = 3;
 
@@ -15,6 +16,7 @@ export default function TypingTest({ onFocusChange }) {
   const hiddenInputRef = useRef(null);
   const tickFn = useGameStore((s) => s.tick);
   const timerRef = useRef(null);
+  const { playCorrect, playIncorrect, playSpace } = useSound();
 
   const [isFocused, setIsFocused] = useState(false);
   const [caretPos, setCaretPos] = useState({ top: 0, left: 0 });
@@ -90,8 +92,6 @@ export default function TypingTest({ onFocusChange }) {
         focusInput();
         return;
       }
-      // On mobile, input events handle typing; skip printable chars from keydown
-      // to avoid double-processing. Let Backspace through since mobile fires it as keydown.
       if (e.key === 'Backspace') {
         handleKey('Backspace');
         return;
@@ -103,16 +103,27 @@ export default function TypingTest({ onFocusChange }) {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [handleKey, focusInput]);
 
+  const playSoundForKey = useCallback((key) => {
+    if (key === ' ') { playSpace(); return; }
+    if (key.length !== 1) return;
+    const { wordStates: ws, wordIndex: wi, words: w, typedWords: tw } = useGameStore.getState();
+    const pos = (tw[wi] ?? '').length - 1;
+    if (pos < 0) return;
+    const state = ws[wi]?.[pos];
+    if (state === 'correct') playCorrect();
+    else if (state === 'incorrect' || state === 'extra') playIncorrect();
+  }, [playCorrect, playIncorrect, playSpace]);
+
   const handleMobileInput = useCallback((e) => {
     const input = e.currentTarget;
     const val = input.value;
     if (!val) return;
-    // Each character typed on mobile arrives here; process each one
     for (const char of val) {
       handleKey(char);
+      playSoundForKey(char);
     }
     input.value = '';
-  }, [handleKey]);
+  }, [handleKey, playSoundForKey]);
 
   const timerDisplay = mode === 'time'
     ? timeRemaining

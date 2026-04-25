@@ -286,6 +286,22 @@ const useGameStore = create((set, get) => ({
     const stored = typeof window !== 'undefined' ? localStorage.getItem('theme') : null;
     return VALID.includes(stored) ? stored : 'paper';
   })(),
+  soundEnabled: (() => {
+    if (typeof window === 'undefined') return true;
+    const s = localStorage.getItem('soundEnabled');
+    return s === null ? true : s === 'true';
+  })(),
+  volume: (() => {
+    if (typeof window === 'undefined') return 0.5;
+    const s = localStorage.getItem('volume');
+    const n = parseFloat(s);
+    return isNaN(n) ? 0.5 : Math.min(1, Math.max(0, n));
+  })(),
+  soundProfile: (() => {
+    const VALID = ['click', 'beep', 'pop', 'nkcreams', 'typewriter'];
+    const s = typeof window !== 'undefined' ? localStorage.getItem('soundProfile') : null;
+    return VALID.includes(s) ? s : 'click';
+  })(),
 
   // History
   history: loadHistory(),
@@ -345,6 +361,21 @@ const useGameStore = create((set, get) => ({
   setTheme: (theme) => {
     if (typeof window !== 'undefined') localStorage.setItem('theme', theme);
     set({ theme });
+  },
+
+  setSoundEnabled: (soundEnabled) => {
+    if (typeof window !== 'undefined') localStorage.setItem('soundEnabled', String(soundEnabled));
+    set({ soundEnabled });
+  },
+
+  setVolume: (volume) => {
+    if (typeof window !== 'undefined') localStorage.setItem('volume', String(volume));
+    set({ volume });
+  },
+
+  setSoundProfile: (soundProfile) => {
+    if (typeof window !== 'undefined') localStorage.setItem('soundProfile', soundProfile);
+    set({ soundProfile });
   },
 
   setLanguage: (language) => {

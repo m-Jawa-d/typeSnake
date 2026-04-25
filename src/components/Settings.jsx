@@ -1,7 +1,8 @@
 'use client';
-import { X, Smile, Frown, Flame, Zap, Wind } from 'lucide-react';
+import { X, Smile, Frown, Flame, Zap, Wind, Volume2, VolumeX } from 'lucide-react';
 import { motion } from 'framer-motion';
 import useGameStore from '../store/gameStore';
+import { previewProfile } from '../hooks/useSound';
 
 const MOODS = [
   { id: 'happy', label: 'happy', Icon: Smile },
@@ -119,8 +120,16 @@ const DIFFICULTIES = [
   { id: 'hard',   label: 'hard' },
 ];
 
+const SOUND_PROFILES = [
+  { id: 'nkcreams',   label: 'mechanical' },
+  { id: 'typewriter', label: 'typewriter' },
+  { id: 'click',      label: 'click'      },
+  { id: 'beep',       label: 'beep'       },
+  { id: 'pop',        label: 'pop'        },
+];
+
 export default function Settings({ isOpen, onClose }) {
-  const { theme, setTheme, language, setLanguage, mood, setMood, difficulty, setDifficulty } = useGameStore();
+  const { theme, setTheme, language, setLanguage, mood, setMood, difficulty, setDifficulty, soundEnabled, setSoundEnabled, volume, setVolume, soundProfile, setSoundProfile } = useGameStore();
 
   if (!isOpen) return null;
 
@@ -319,6 +328,102 @@ export default function Settings({ isOpen, onClose }) {
                   onMouseLeave={(e) => { if (!active) e.currentTarget.style.opacity = '1'; }}
                 >
                   {diff.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* divider */}
+        <div style={{ height: '1px', background: 'var(--sub-alt)' }} />
+
+        {/* sound */}
+        <div>
+          <p style={{
+            color: 'var(--text)',
+            opacity: 0.65,
+            fontSize: '0.65rem',
+            fontFamily: 'var(--font)',
+            letterSpacing: '0.06em',
+            textTransform: 'uppercase',
+            marginBottom: '0.5rem',
+          }}>
+            sound
+          </p>
+          {/* on/off + volume row */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+            <button
+              onClick={() => setSoundEnabled(!soundEnabled)}
+              title={soundEnabled ? 'disable sound' : 'enable sound'}
+              style={{
+                background: soundEnabled ? 'var(--main)' : 'var(--sub-alt)',
+                color: soundEnabled ? 'var(--bg)' : 'var(--text)',
+                border: 'none',
+                borderRadius: '4px',
+                padding: '0.3rem 0.7rem',
+                fontSize: '0.75rem',
+                fontFamily: 'var(--font)',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                transition: 'background 0.12s ease, color 0.12s ease',
+                flexShrink: 0,
+              }}
+            >
+              {soundEnabled ? <Volume2 size={13} strokeWidth={1.5} /> : <VolumeX size={13} strokeWidth={1.5} />}
+              {soundEnabled ? 'on' : 'off'}
+            </button>
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.05}
+              value={volume}
+              disabled={!soundEnabled}
+              onChange={(e) => setVolume(parseFloat(e.target.value))}
+              style={{
+                flex: 1,
+                accentColor: 'var(--main)',
+                opacity: soundEnabled ? 1 : 0.3,
+                cursor: soundEnabled ? 'pointer' : 'default',
+                transition: 'opacity 0.12s ease',
+              }}
+            />
+            <span style={{
+              color: 'var(--sub)',
+              fontSize: '0.7rem',
+              fontFamily: 'var(--font)',
+              minWidth: '2.2rem',
+              textAlign: 'right',
+              opacity: soundEnabled ? 1 : 0.3,
+            }}>
+              {Math.round(volume * 100)}%
+            </span>
+          </div>
+          {/* profile chips */}
+          <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', opacity: soundEnabled ? 1 : 0.3, transition: 'opacity 0.12s ease' }}>
+            {SOUND_PROFILES.map((p) => {
+              const active = soundProfile === p.id;
+              return (
+                <button
+                  key={p.id}
+                  onClick={() => { if (!soundEnabled) return; setSoundProfile(p.id); previewProfile(p.id, volume); }}
+                  style={{
+                    background: active ? 'var(--main)' : 'var(--sub-alt)',
+                    color: active ? 'var(--bg)' : 'var(--text)',
+                    border: 'none',
+                    borderRadius: '4px',
+                    padding: '0.3rem 0.8rem',
+                    fontSize: '0.75rem',
+                    fontFamily: 'var(--font)',
+                    cursor: soundEnabled ? 'pointer' : 'default',
+                    transition: 'background 0.12s ease, color 0.12s ease',
+                  }}
+                  onMouseEnter={(e) => { if (!active && soundEnabled) e.currentTarget.style.opacity = '0.7'; }}
+                  onMouseLeave={(e) => { if (!active) e.currentTarget.style.opacity = '1'; }}
+                >
+                  {p.label}
                 </button>
               );
             })}

@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Settings, Globe, Info, BarChart3, Swords } from 'lucide-react';
 import useGameStore from '../store/gameStore';
 import useMultiplayerStore from '../store/multiplayerStore';
+import { preloadProfile } from '../hooks/useSound';
 import ConfigBar from '../components/ConfigBar';
 import TypingTest from '../components/TypingTest';
 import Results from '../components/Results';
@@ -14,7 +15,7 @@ import RaceView from '../components/RaceView';
 import RaceResults from '../components/RaceResults';
 
 export default function Home() {
-  const { status, initTest, theme } = useGameStore();
+  const { status, initTest, theme, soundProfile } = useGameStore();
   const { mpStatus, startRace } = useMultiplayerStore();
   const [focused, setFocused] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -24,6 +25,8 @@ export default function Home() {
   const inMultiplayer = multiplayerOpen || ['lobby', 'countdown', 'racing', 'finished'].includes(mpStatus);
 
   useEffect(() => { initTest(); }, [initTest]);
+
+  useEffect(() => { preloadProfile(soundProfile); }, [soundProfile]);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
