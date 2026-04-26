@@ -64,7 +64,7 @@ export default function SnakeSplash({ onDone }) {
     const HEAD_RADIUS  = fontSize * 0.143;   // fatter head
     const SPEED        = Math.max(1.8, W / 70); // px per frame, slow enough to see
     const WAVE_AMP     = fontSize * 0.22;
-    const WAVE_PERIOD  = W * 0.25;           // one full wave per ~55% of screen width
+    const WAVE_PERIOD  = W * 0.55;           // one full wave per ~55% of screen width
 
     // position history (one entry per pixel advanced)
     const historyMax = BODY_COUNT * SEG_SPACING + 20;
