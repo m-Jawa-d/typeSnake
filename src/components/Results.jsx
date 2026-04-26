@@ -27,7 +27,7 @@ function Divider() {
     <div style={{
       height: '1px',
       background: 'var(--sub-alt)',
-      margin: '2.5rem 0',
+      margin: 'clamp(1.25rem, 3vw, 2.5rem) 0',
     }} />
   );
 }
@@ -67,10 +67,10 @@ export default function Results() {
       style={{ width: '100%', maxWidth: '900px', margin: '0 auto' }}
     >
       {/* Primary stats row */}
-      <div style={{
+      <div className="results-primary" style={{
         display: 'flex',
         alignItems: 'flex-end',
-        gap: '5rem',
+        gap: 'clamp(1.5rem, 6vw, 5rem)',
         flexWrap: 'wrap',
       }}>
         <Stat label="wpm" value={wpm} large />
@@ -98,9 +98,9 @@ export default function Results() {
       <Divider />
 
       {/* Secondary stats row */}
-      <div style={{
+      <div className="results-secondary" style={{
         display: 'flex',
-        gap: '4rem',
+        gap: 'clamp(1.25rem, 5vw, 4rem)',
         flexWrap: 'wrap',
       }}>
         <Stat label="raw" value={rawWpm} />
@@ -113,10 +113,10 @@ export default function Results() {
       <Divider />
 
       {/* Graph + Heatmap side by side */}
-      <div style={{
+      <div className="results-viz-grid" style={{
         display: 'grid',
         gridTemplateColumns: wpmTimeline && wpmTimeline.length >= 2 ? '1fr 1fr' : '1fr',
-        gap: '4rem',
+        gap: 'clamp(1.5rem, 4vw, 4rem)',
         alignItems: 'start',
       }}>
         <WpmGraph timeline={wpmTimeline} />

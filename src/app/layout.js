@@ -9,7 +9,7 @@ const notoNastaliq = Noto_Nastaliq_Urdu({
 });
 
 export const metadata = {
-  title: 'keyflow — typing speed test',
+  title: 'typeSnake — typing speed test',
   description: 'A clean, minimal typing speed test',
 };
 

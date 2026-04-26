@@ -576,6 +576,11 @@ const useGameStore = create((set, get) => ({
     });
 
     get()._recalcStats();
+
+    // Auto-finish test on last word completion (for non-time modes)
+    if (mode !== 'time' && wordIndex === words.length - 1 && typed.length === currentWord.length - 1) {
+      get().finishTest();
+    }
   },
 
   _recalcStats: () => {

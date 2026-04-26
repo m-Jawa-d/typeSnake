@@ -13,11 +13,11 @@ const MOODS = [
 ];
 
 const LIGHT_THEMES = [
-  { id: 'paper',  label: 'paper',  bg: '#f5f0eb', main: '#c0392b', text: '#2c2c2c', sub: '#b0a89e' },
-  { id: 'ivory',  label: 'ivory',  bg: '#faf7f2', main: '#9b7d4a', text: '#3a3228', sub: '#9a8f78' },
-  { id: 'zinc',   label: 'zinc',   bg: '#f4f4f5', main: '#3f3f46', text: '#18181b', sub: '#a1a1aa' },
-  { id: 'rose',   label: 'rose',   bg: '#fff5f5', main: '#e11d48', text: '#1c0a0a', sub: '#d07070' },
-  { id: 'sky',    label: 'sky',    bg: '#f0f7ff', main: '#0369a1', text: '#0c1a2e', sub: '#5a9fd4' },
+  { id: 'paper',  label: 'paper',  bg: '#f5f0eb', main: '#c0392b', text: '#2c2c2c', sub: '#7a736a' },
+  { id: 'ivory',  label: 'ivory',  bg: '#faf7f2', main: '#8a6e3e', text: '#2e2620', sub: '#7a6e5a' },
+  { id: 'zinc',   label: 'zinc',   bg: '#f4f4f5', main: '#3f3f46', text: '#18181b', sub: '#71717a' },
+  { id: 'rose',   label: 'rose',   bg: '#fff5f5', main: '#c9184a', text: '#1c0a0a', sub: '#8c4a5a' },
+  { id: 'sky',    label: 'sky',    bg: '#f0f7ff', main: '#0369a1', text: '#0c1a2e', sub: '#3a6ea0' },
 ];
 
 const DARK_THEMES = [
@@ -95,7 +95,7 @@ function ThemeGroup({ label, themes, activeTheme, onSelect }) {
       }}>
         {label}
       </p>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.4rem' }}>
+      <div className="theme-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.4rem' }}>
         {themes.map((t) => (
           <ThemeCard
             key={t.id}
@@ -162,7 +162,9 @@ export default function Settings({ isOpen, onClose }) {
           padding: '1.5rem',
           maxWidth: '480px',
           width: '92%',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+          maxHeight: '90dvh',
+          overflowY: 'auto',
+          boxShadow: '0 8px 40px rgba(0,0,0,0.28)',
           border: '1px solid var(--sub-alt)',
           display: 'flex',
           flexDirection: 'column',
@@ -257,7 +259,7 @@ export default function Settings({ isOpen, onClose }) {
           }}>
             mood
           </p>
-          <div style={{ display: 'flex', gap: '0.4rem' }}>
+          <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
             {MOODS.map(({ id, label, Icon }) => {
               const active = mood === id;
               return (

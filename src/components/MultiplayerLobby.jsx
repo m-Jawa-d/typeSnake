@@ -85,7 +85,7 @@ export default function MultiplayerLobby({ onBack }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <div style={{
               color: 'var(--main)',
-              fontSize: '2.5rem',
+              fontSize: 'clamp(1.75rem, 6vw, 2.5rem)',
               fontWeight: 700,
               letterSpacing: '0.15em',
             }}>
@@ -168,7 +168,26 @@ export default function MultiplayerLobby({ onBack }) {
 
   // Entry form
   return (
-    <div style={{ width: '100%', maxWidth: '400px', margin: '0 auto' }}>
+    <div style={{ width: '100%', maxWidth: '500px', margin: '0 auto' }}>
+      {/* How it works info */}
+      <div style={{
+        background: 'var(--sub-alt)',
+        borderRadius: '8px',
+        padding: '1rem',
+        marginBottom: '2rem',
+        fontSize: '0.8rem',
+        color: 'var(--sub)',
+        lineHeight: '1.6',
+      }}>
+        <div style={{ fontWeight: 600, color: 'var(--text)', marginBottom: '0.5rem' }}>how it works</div>
+        <ul style={{ margin: '0.5rem 0 0 1rem', paddingLeft: 0 }}>
+          <li>create or join a room with a friend</li>
+          <li>race through the same 30-word text simultaneously</li>
+          <li>watch each other's progress in real-time</li>
+          <li>first to type all words correctly wins</li>
+        </ul>
+      </div>
+
       <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
         {['create', 'join'].map((t) => (
           <button
