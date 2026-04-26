@@ -57,7 +57,7 @@ export default function SnakeSplash({ onDone }) {
       runX += w;
     }
 
-    // snake config — very tight segments with connecting strokes
+    // snake config — very tight segments with connecting stroke
     const SEG_RADIUS   = fontSize * 0.1;   // fatter dot
     const SEG_SPACING  = fontSize * 0.038;   // super tight, almost overlapping
     const BODY_COUNT   = Math.round(fontSize * 1.4 / SEG_SPACING); // ~35 segs, half length
