@@ -13,7 +13,8 @@ import StatsPage from '../components/StatsPage';
 import MultiplayerLobby from '../components/MultiplayerLobby';
 import RaceView from '../components/RaceView';
 import RaceResults from '../components/RaceResults';
-import SnakeSplash from '../components/SnakeSplash';
+import SplashScreen from '../components/SplashScreen';
+
 const DARK_THEMES = ['carbon', 'mocha', 'forest', 'slate', 'graphite'];
 
 export default function Home() {
@@ -23,7 +24,6 @@ export default function Home() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [statsOpen, setStatsOpen] = useState(false);
   const [multiplayerOpen, setMultiplayerOpen] = useState(false);
-  const [showSplash, setShowSplash] = useState(true);
 
   const inMultiplayer = multiplayerOpen || ['lobby', 'countdown', 'racing', 'finished'].includes(mpStatus);
   const showStats = statsOpen;
@@ -51,7 +51,6 @@ export default function Home() {
       color: 'var(--text)',
       fontFamily: 'var(--font)',
     }}>
-      {/* {showSplash && <SnakeSplash onDone={() => setShowSplash(false)} />} */}
       {/* ── Top nav ─────────────────────────────────── */}
       <header style={{
         display: 'flex',
@@ -387,6 +386,7 @@ export default function Home() {
         )}
       </AnimatePresence>
 
+      <SplashScreen />
     </div>
   );
 }
