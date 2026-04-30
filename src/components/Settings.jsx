@@ -120,6 +120,13 @@ const DIFFICULTIES = [
   { id: 'hard',   label: 'hard' },
 ];
 
+const IDLE_GAMES = [
+  { id: 'snake',  label: 'snake'   },
+  { id: 'pacman', label: 'pac-man' },
+  { id: 'matrix', label: 'matrix'  },
+  { id: 'random', label: 'random'  },
+];
+
 const SOUND_PROFILES = [
   { id: 'nkcreams',   label: 'mechanical' },
   { id: 'typewriter', label: 'typewriter' },
@@ -129,7 +136,7 @@ const SOUND_PROFILES = [
 ];
 
 export default function Settings({ isOpen, onClose }) {
-  const { theme, setTheme, language, setLanguage, mood, setMood, difficulty, setDifficulty, soundEnabled, setSoundEnabled, volume, setVolume, soundProfile, setSoundProfile } = useGameStore();
+  const { theme, setTheme, language, setLanguage, mood, setMood, difficulty, setDifficulty, soundEnabled, setSoundEnabled, volume, setVolume, soundProfile, setSoundProfile, idleGame, setIdleGame } = useGameStore();
 
   if (!isOpen) return null;
 
@@ -426,6 +433,50 @@ export default function Settings({ isOpen, onClose }) {
                   onMouseLeave={(e) => { if (!active) e.currentTarget.style.opacity = '1'; }}
                 >
                   {p.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* divider */}
+        <div style={{ height: '1px', background: 'var(--sub-alt)' }} />
+
+        {/* idle game */}
+        <div>
+          <p style={{
+            color: 'var(--text)',
+            opacity: 0.65,
+            fontSize: '0.65rem',
+            fontFamily: 'var(--font)',
+            letterSpacing: '0.06em',
+            textTransform: 'uppercase',
+            marginBottom: '0.5rem',
+          }}>
+            idle animation
+          </p>
+          <div style={{ display: 'flex', gap: '0.4rem' }}>
+            {IDLE_GAMES.map((g) => {
+              const active = idleGame === g.id;
+              return (
+                <button
+                  key={g.id}
+                  onClick={() => setIdleGame(g.id)}
+                  style={{
+                    background: active ? 'var(--main)' : 'var(--sub-alt)',
+                    color: active ? 'var(--bg)' : 'var(--text)',
+                    border: 'none',
+                    borderRadius: '4px',
+                    padding: '0.3rem 0.8rem',
+                    fontSize: '0.75rem',
+                    fontFamily: 'var(--font)',
+                    cursor: 'pointer',
+                    transition: 'background 0.12s ease, color 0.12s ease',
+                  }}
+                  onMouseEnter={(e) => { if (!active) e.currentTarget.style.opacity = '0.7'; }}
+                  onMouseLeave={(e) => { if (!active) e.currentTarget.style.opacity = '1'; }}
+                >
+                  {g.label}
                 </button>
               );
             })}

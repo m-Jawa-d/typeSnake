@@ -302,6 +302,11 @@ const useGameStore = create((set, get) => ({
     const s = typeof window !== 'undefined' ? localStorage.getItem('soundProfile') : null;
     return VALID.includes(s) ? s : 'click';
   })(),
+  idleGame: (() => {
+    const VALID = ['snake', 'pacman', 'matrix', 'random'];
+    const s = typeof window !== 'undefined' ? localStorage.getItem('idleGame') : null;
+    return VALID.includes(s) ? s : 'snake';
+  })(),
 
   // History
   history: loadHistory(),
@@ -376,6 +381,11 @@ const useGameStore = create((set, get) => ({
   setSoundProfile: (soundProfile) => {
     if (typeof window !== 'undefined') localStorage.setItem('soundProfile', soundProfile);
     set({ soundProfile });
+  },
+
+  setIdleGame: (idleGame) => {
+    if (typeof window !== 'undefined') localStorage.setItem('idleGame', idleGame);
+    set({ idleGame });
   },
 
   setLanguage: (language) => {
