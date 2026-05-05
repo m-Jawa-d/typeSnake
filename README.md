@@ -2,7 +2,7 @@
 
 A minimalist typing speed test built with Next.js. Supports multiple modes, mood-based word pools, themes, and multilingual input.
 
-**Live demo:** [typesnake.app](typesnake.vercel.app
+**Live demo:** [typesnake.app](https://typesnake.vercel.app/)
 
 ---
 
