@@ -291,6 +291,15 @@ const useGameStore = create((set, get) => ({
     const s = localStorage.getItem('soundEnabled');
     return s === null ? true : s === 'true';
   })(),
+  fluidEffectEnabled: (() => {
+    if (typeof window === 'undefined') return false;
+    const stored = localStorage.getItem('fluidEffectEnabled');
+    return stored === null ? false : stored === 'true';
+  })(),
+  fluidColorMode: (() => {
+    if (typeof window === 'undefined') return 'theme';
+    return localStorage.getItem('fluidColorMode') === 'random' ? 'random' : 'theme';
+  })(),
   volume: (() => {
     if (typeof window === 'undefined') return 0.5;
     const s = localStorage.getItem('volume');
@@ -371,6 +380,16 @@ const useGameStore = create((set, get) => ({
   setSoundEnabled: (soundEnabled) => {
     if (typeof window !== 'undefined') localStorage.setItem('soundEnabled', String(soundEnabled));
     set({ soundEnabled });
+  },
+
+  setFluidEffectEnabled: (fluidEffectEnabled) => {
+    if (typeof window !== 'undefined') localStorage.setItem('fluidEffectEnabled', String(fluidEffectEnabled));
+    set({ fluidEffectEnabled });
+  },
+
+  setFluidColorMode: (fluidColorMode) => {
+    if (typeof window !== 'undefined') localStorage.setItem('fluidColorMode', fluidColorMode);
+    set({ fluidColorMode });
   },
 
   setVolume: (volume) => {

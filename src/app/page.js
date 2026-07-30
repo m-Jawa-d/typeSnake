@@ -14,6 +14,7 @@ import MultiplayerLobby from '../components/MultiplayerLobby';
 import RaceView from '../components/RaceView';
 import RaceResults from '../components/RaceResults';
 import SplashScreen from '../components/SplashScreen';
+import FluidBackground from '../components/FluidBackground';
 
 const DARK_THEMES = ['carbon', 'mocha', 'forest', 'slate', 'graphite'];
 
@@ -66,7 +67,7 @@ function updateFavicon(theme) {
 }
 
 export default function Home() {
-  const { status, initTest, theme, setTheme, soundProfile, wpm, accuracy, timeRemaining, incorrectChars, mode, wordOption, wordIndex, words } = useGameStore();
+  const { status, initTest, theme, setTheme, soundProfile, fluidEffectEnabled, fluidColorMode, wpm, accuracy, timeRemaining, incorrectChars, mode, wordOption, wordIndex, words } = useGameStore();
   const { mpStatus, startRace } = useMultiplayerStore();
   const [focused, setFocused] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -96,14 +97,22 @@ export default function Home() {
   return (
     <div style={{
       minHeight: '100vh',
+      position: 'relative',
+      isolation: 'isolate',
       display: 'flex',
       flexDirection: 'column',
       background: 'var(--bg)',
       color: 'var(--text)',
       fontFamily: 'var(--font)',
     }}>
+      {fluidEffectEnabled && showPractice && (
+        <FluidBackground theme={theme} colorMode={fluidColorMode} />
+      )}
+
       {/* ── Top nav ─────────────────────────────────── */}
       <header style={{
+        position: 'relative',
+        zIndex: 1,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -228,6 +237,8 @@ export default function Home() {
 
       {/* ── Main content ────────────────────────────── */}
       <main style={{
+        position: 'relative',
+        zIndex: 1,
         flex: 1,
         display: 'flex',
         flexDirection: 'column',
@@ -420,6 +431,8 @@ export default function Home() {
 
       {/* ── Tip footer ──────────────────────────────── */}
       <footer style={{
+        position: 'relative',
+        zIndex: 1,
         textAlign: 'center',
         padding: '1rem 2rem 1.5rem',
         opacity: navFade ? 0 : 1,

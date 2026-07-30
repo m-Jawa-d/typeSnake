@@ -136,7 +136,7 @@ const SOUND_PROFILES = [
 ];
 
 export default function Settings({ isOpen, onClose }) {
-  const { theme, setTheme, language, setLanguage, mood, setMood, difficulty, setDifficulty, soundEnabled, setSoundEnabled, volume, setVolume, soundProfile, setSoundProfile, idleGame, setIdleGame } = useGameStore();
+  const { theme, setTheme, language, setLanguage, mood, setMood, difficulty, setDifficulty, soundEnabled, setSoundEnabled, volume, setVolume, soundProfile, setSoundProfile, idleGame, setIdleGame, fluidEffectEnabled, setFluidEffectEnabled, fluidColorMode, setFluidColorMode } = useGameStore();
 
   if (!isOpen) return null;
 
@@ -477,6 +477,74 @@ export default function Settings({ isOpen, onClose }) {
                   onMouseLeave={(e) => { if (!active) e.currentTarget.style.opacity = '1'; }}
                 >
                   {g.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* divider */}
+        <div style={{ height: '1px', background: 'var(--sub-alt)' }} />
+
+        {/* visual effects */}
+        <div>
+          <p style={{
+            color: 'var(--text)',
+            opacity: 0.65,
+            fontSize: '0.65rem',
+            fontFamily: 'var(--font)',
+            letterSpacing: '0.06em',
+            textTransform: 'uppercase',
+            marginBottom: '0.5rem',
+          }}>
+            visual effects
+          </p>
+          <button
+            onClick={() => setFluidEffectEnabled(!fluidEffectEnabled)}
+            aria-pressed={fluidEffectEnabled}
+            style={{
+              background: fluidEffectEnabled ? 'var(--main)' : 'var(--sub-alt)',
+              color: fluidEffectEnabled ? 'var(--bg)' : 'var(--text)',
+              border: 'none',
+              borderRadius: '4px',
+              padding: '0.3rem 0.8rem',
+              fontSize: '0.75rem',
+              fontFamily: 'var(--font)',
+              cursor: 'pointer',
+              transition: 'background 0.12s ease, color 0.12s ease',
+            }}
+          >
+            liquid background {fluidEffectEnabled ? 'on' : 'off'}
+          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.5rem' }}>
+            <span style={{
+              color: 'var(--sub)',
+              fontSize: '0.7rem',
+              fontFamily: 'var(--font)',
+              marginRight: '0.15rem',
+            }}>
+              color
+            </span>
+            {['random', 'theme'].map((colorMode) => {
+              const active = fluidColorMode === colorMode;
+              return (
+                <button
+                  key={colorMode}
+                  onClick={() => setFluidColorMode(colorMode)}
+                  aria-pressed={active}
+                  style={{
+                    background: active ? 'var(--main)' : 'var(--sub-alt)',
+                    color: active ? 'var(--bg)' : 'var(--text)',
+                    border: 'none',
+                    borderRadius: '4px',
+                    padding: '0.3rem 0.8rem',
+                    fontSize: '0.75rem',
+                    fontFamily: 'var(--font)',
+                    cursor: 'pointer',
+                    transition: 'background 0.12s ease, color 0.12s ease',
+                  }}
+                >
+                  {colorMode}
                 </button>
               );
             })}
