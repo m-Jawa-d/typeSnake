@@ -1,8 +1,8 @@
-# Typing Test
+# TypeSnake 🐍
 
 A minimalist typing speed test built with Next.js. Supports multiple modes, mood-based word pools, themes, and multilingual input.
 
-**Live demo:** [keyflows.vercel.app](https://keyflows.vercel.app/)
+**Live demo:** [typesnake.app](https://typesnake.vercel.app/)
 
 ---
 
