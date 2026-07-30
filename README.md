@@ -4,6 +4,12 @@ A minimalist typing speed test built with Next.js. Supports multiple modes, mood
 
 **Live demo:** [typesnake.app](https://typesnake.vercel.app/)
 
+## Screenshots
+
+![TypeSnake typing test interface](public/images/typing-test-desktop.png)
+
+![TypeSnake app preview](public/images/preview.png)
+
 ---
 
 ## Features
