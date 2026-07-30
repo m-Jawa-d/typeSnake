@@ -17,6 +17,54 @@ import SplashScreen from '../components/SplashScreen';
 
 const DARK_THEMES = ['carbon', 'mocha', 'forest', 'slate', 'graphite'];
 
+function updateFavicon(theme) {
+  const accent = getComputedStyle(document.documentElement)
+    .getPropertyValue('--main')
+    .trim();
+  const match = accent.match(/^#([\da-f]{2})([\da-f]{2})([\da-f]{2})$/i);
+  if (!match) return;
+
+  const accentRgb = match.slice(1).map((channel) => parseInt(channel, 16));
+  const image = new Image();
+
+  image.onload = () => {
+    if (document.documentElement.dataset.theme !== theme) return;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 128;
+    canvas.height = 128;
+    const context = canvas.getContext('2d');
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+    const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
+    for (let index = 0; index < pixels.data.length; index += 4) {
+      const red = pixels.data[index];
+      const green = pixels.data[index + 1];
+      const blue = pixels.data[index + 2];
+      const neutral = Math.max(red, blue);
+      const greenTint = Math.max(0, green - neutral);
+
+      if (greenTint > 2) {
+        pixels.data[index] = Math.min(255, neutral + (accentRgb[0] * greenTint) / 255);
+        pixels.data[index + 1] = Math.min(255, neutral + (accentRgb[1] * greenTint) / 255);
+        pixels.data[index + 2] = Math.min(255, neutral + (accentRgb[2] * greenTint) / 255);
+      }
+    }
+    context.putImageData(pixels, 0, 0);
+
+    let favicon = document.querySelector('link[rel="icon"]');
+    if (!favicon) {
+      favicon = document.createElement('link');
+      favicon.rel = 'icon';
+      document.head.appendChild(favicon);
+    }
+    favicon.type = 'image/png';
+    favicon.href = canvas.toDataURL('image/png');
+  };
+
+  image.src = '/icon.png';
+}
+
 export default function Home() {
   const { status, initTest, theme, setTheme, soundProfile, wpm, accuracy, timeRemaining, incorrectChars, mode, wordOption, wordIndex, words } = useGameStore();
   const { mpStatus, startRace } = useMultiplayerStore();
@@ -32,7 +80,10 @@ export default function Home() {
 
   useEffect(() => { initTest(); }, [initTest]);
   useEffect(() => { preloadProfile(soundProfile); }, [soundProfile]);
-  useEffect(() => { document.documentElement.setAttribute('data-theme', theme); }, [theme]);
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    updateFavicon(theme);
+  }, [theme]);
 
   const handleFocusChange = useCallback((f) => setFocused(f), []);
 

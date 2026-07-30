@@ -46,6 +46,30 @@ function SnakeOverlay({ containerRef, wordsRef, active }) {
     const getTotalWords = () => wordEls.length;
     const allEaten = () => eaten.size >= getTotalWords() && getTotalWords() > 0;
 
+    const initSnake = () => {
+      const length = 8;
+      const directions = [
+        { x: 1, y: 0 },
+        { x: -1, y: 0 },
+        { x: 0, y: 1 },
+        { x: 0, y: -1 },
+      ].filter((dir) => (dir.x !== 0 ? cols : rows) >= length);
+      const dir = directions[Math.floor(Math.random() * directions.length)] ?? { x: 1, y: 0 };
+      const minHeadX = dir.x === 1 ? length - 1 : 0;
+      const maxHeadX = dir.x === -1 ? cols - length : cols - 1;
+      const minHeadY = dir.y === 1 ? length - 1 : 0;
+      const maxHeadY = dir.y === -1 ? rows - length : rows - 1;
+      const head = {
+        x: minHeadX + Math.floor(Math.random() * (maxHeadX - minHeadX + 1)),
+        y: minHeadY + Math.floor(Math.random() * (maxHeadY - minHeadY + 1)),
+      };
+      const snake = Array.from({ length }, (_, i) => ({
+        x: head.x - dir.x * i,
+        y: head.y - dir.y * i,
+      }));
+      return { snake, dir };
+    };
+
     // watch for word list changes (mood/language/mode switch resets words)
     const wordObserver = new MutationObserver(() => {
       const newEls = Array.from(wordsRef.current.querySelectorAll('[data-word]'));
@@ -54,23 +78,20 @@ function SnakeOverlay({ containerRef, wordsRef, active }) {
         eaten.clear();
         growPending = 0;
         if (stateRef.current) {
+          const initialState = initSnake();
           stateRef.current.sleeping = false;
-          stateRef.current.snake = initSnake();
-          stateRef.current.dir = { x: 1, y: 0 };
+          stateRef.current.snake = initialState.snake;
+          stateRef.current.dir = initialState.dir;
         }
       }
     });
     wordObserver.observe(wordsRef.current, { childList: true, subtree: false });
 
-    const initSnake = () => {
-      const segs = [];
-      for (let i = 0; i < 8; i++) segs.push({ x: centerCol - i, y: centerRow });
-      return segs;
-    };
+    const initialState = initSnake();
 
     stateRef.current = {
-      snake: initSnake(),
-      dir: { x: 1, y: 0 },
+      snake: initialState.snake,
+      dir: initialState.dir,
       lastMove: 0,
       speed: 450,
       sleeping: false,
