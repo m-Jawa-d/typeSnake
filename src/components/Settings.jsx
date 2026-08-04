@@ -1,8 +1,10 @@
 'use client';
+import { useEffect } from 'react';
 import { X, Smile, Frown, Flame, Zap, Wind, Volume2, VolumeX } from 'lucide-react';
 import { motion } from 'framer-motion';
 import useGameStore from '../store/gameStore';
 import { previewProfile } from '../hooks/useSound';
+import { APP_NAME, APP_VERSION } from '../lib/version';
 
 const MOODS = [
   { id: 'happy', label: 'happy', Icon: Smile },
@@ -13,19 +15,16 @@ const MOODS = [
 ];
 
 const LIGHT_THEMES = [
-  { id: 'paper',  label: 'paper',  bg: '#f5f0eb', main: '#c0392b', text: '#2c2c2c', sub: '#7a736a' },
-  { id: 'ivory',  label: 'ivory',  bg: '#faf7f2', main: '#8a6e3e', text: '#2e2620', sub: '#7a6e5a' },
-  { id: 'zinc',   label: 'zinc',   bg: '#f4f4f5', main: '#3f3f46', text: '#18181b', sub: '#71717a' },
-  { id: 'rose',   label: 'rose',   bg: '#fff5f5', main: '#c9184a', text: '#1c0a0a', sub: '#8c4a5a' },
-  { id: 'sky',    label: 'sky',    bg: '#f0f7ff', main: '#0369a1', text: '#0c1a2e', sub: '#3a6ea0' },
+  { id: 'paper', label: 'paper', bg: '#f3eee6', main: '#b54a3a', text: '#2a2622', sub: '#8a8178' },
+  { id: 'ivory', label: 'ivory', bg: '#f7f3ec', main: '#9a7b4f', text: '#2c2620', sub: '#8b7f6e' },
+  { id: 'mist',  label: 'mist',  bg: '#f2f4f6', main: '#4a6670', text: '#1c2428', sub: '#6e7c84' },
 ];
 
 const DARK_THEMES = [
-  { id: 'carbon',   label: 'carbon',   bg: '#111111', main: '#e2b714', text: '#d1d0c5', sub: '#7e8185' },
-  { id: 'mocha',    label: 'mocha',    bg: '#1e1e2e', main: '#cba6f7', text: '#cdd6f4', sub: '#7c7f93' },
-  { id: 'forest',   label: 'forest',   bg: '#1a2318', main: '#a3be8c', text: '#d8e4d0', sub: '#6e8a67' },
-  { id: 'slate',    label: 'slate',    bg: '#0f172a', main: '#38bdf8', text: '#cbd5e1', sub: '#64748b' },
-  { id: 'graphite', label: 'graphite', bg: '#1c1c1e', main: '#ff9f0a', text: '#e5e5ea', sub: '#8e8e93' },
+  { id: 'carbon', label: 'carbon', bg: '#0e0e0e', main: '#d4af37', text: '#d4d2c8', sub: '#6f7276' },
+  { id: 'mocha',  label: 'mocha',  bg: '#1a1b26', main: '#b8a0e0', text: '#c8cce0', sub: '#6e7188' },
+  { id: 'forest', label: 'forest', bg: '#161e15', main: '#8fbc8a', text: '#d2ddd0', sub: '#6a7d66' },
+  { id: 'venom',  label: 'venom',  bg: '#0c1210', main: '#4ecf8a', text: '#d5e0da', sub: '#6a7d74' },
 ];
 
 function ThemeCard({ t, active, onClick }) {
@@ -95,7 +94,7 @@ function ThemeGroup({ label, themes, activeTheme, onSelect }) {
       }}>
         {label}
       </p>
-      <div className="theme-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.4rem' }}>
+      <div className="theme-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(3.4rem, 1fr))', gap: '0.45rem' }}>
         {themes.map((t) => (
           <ThemeCard
             key={t.id}
@@ -121,6 +120,7 @@ const DIFFICULTIES = [
 ];
 
 const IDLE_GAMES = [
+  { id: 'off',    label: 'off'     },
   { id: 'snake',  label: 'snake'   },
   { id: 'pacman', label: 'pac-man' },
   { id: 'matrix', label: 'matrix'  },
@@ -135,51 +135,189 @@ const SOUND_PROFILES = [
   { id: 'pop',        label: 'pop'        },
 ];
 
+const CARET_STYLES = [
+  { id: 'line',      label: 'line' },
+  { id: 'block',     label: 'block' },
+  { id: 'underline', label: 'underline' },
+];
+
+const FONT_SIZES = [
+  { id: 'small',  label: 'S' },
+  { id: 'medium', label: 'M' },
+  { id: 'large',  label: 'L' },
+];
+
+const LIVE_STATS = [
+  { id: 'wpm',      label: 'wpm',      key: 'showLiveWpm',      setter: 'setShowLiveWpm' },
+  { id: 'accuracy', label: 'accuracy', key: 'showLiveAccuracy', setter: 'setShowLiveAccuracy' },
+  { id: 'time',     label: 'time',     key: 'showLiveTime',     setter: 'setShowLiveTime' },
+  { id: 'errors',   label: 'errors',   key: 'showLiveErrors',   setter: 'setShowLiveErrors' },
+];
+
+function SectionLabel({ children }) {
+  return (
+    <p style={{
+      color: 'var(--text)',
+      opacity: 0.65,
+      fontSize: '0.65rem',
+      fontFamily: 'var(--font)',
+      letterSpacing: '0.06em',
+      textTransform: 'uppercase',
+      marginBottom: '0.5rem',
+    }}>
+      {children}
+    </p>
+  );
+}
+
+function SubLabel({ children }) {
+  return (
+    <p style={{
+      color: 'var(--sub)',
+      fontSize: '0.65rem',
+      fontFamily: 'var(--font)',
+      letterSpacing: '0.04em',
+      marginBottom: '0.4rem',
+    }}>
+      {children}
+    </p>
+  );
+}
+
+function Chip({ active, onClick, children, disabled, title }) {
+  return (
+    <button
+      type="button"
+      title={title}
+      onClick={onClick}
+      disabled={disabled}
+      aria-pressed={active}
+      style={{
+        background: active ? 'var(--main)' : 'var(--sub-alt)',
+        color: active ? 'var(--bg)' : 'var(--text)',
+        border: 'none',
+        borderRadius: '4px',
+        padding: '0.3rem 0.8rem',
+        fontSize: '0.75rem',
+        fontFamily: 'var(--font)',
+        cursor: disabled ? 'default' : 'pointer',
+        transition: 'background 0.12s ease, color 0.12s ease',
+        opacity: disabled ? 0.4 : 1,
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '0.35rem',
+      }}
+      onMouseEnter={(e) => { if (!active && !disabled) e.currentTarget.style.opacity = '0.7'; }}
+      onMouseLeave={(e) => { if (!disabled) e.currentTarget.style.opacity = disabled ? 0.4 : 1; }}
+    >
+      {children}
+    </button>
+  );
+}
+
+function Divider() {
+  return <div style={{ height: '1px', background: 'var(--sub-alt)', flexShrink: 0 }} />;
+}
+
+const backdropVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1 },
+};
+
+const drawerVariants = {
+  hidden: { x: '100%' },
+  visible: { x: 0 },
+};
+
 export default function Settings({ isOpen, onClose }) {
-  const { theme, setTheme, language, setLanguage, mood, setMood, difficulty, setDifficulty, soundEnabled, setSoundEnabled, volume, setVolume, soundProfile, setSoundProfile, idleGame, setIdleGame, fluidEffectEnabled, setFluidEffectEnabled, fluidColorMode, setFluidColorMode } = useGameStore();
+  const {
+    theme, setTheme, language, setLanguage, mood, setMood, difficulty, setDifficulty,
+    soundEnabled, setSoundEnabled, volume, setVolume, soundProfile, setSoundProfile,
+    idleGame, setIdleGame, fluidEffectEnabled, setFluidEffectEnabled, fluidColorMode, setFluidColorMode,
+    showLiveWpm, setShowLiveWpm, showLiveAccuracy, setShowLiveAccuracy,
+    showLiveTime, setShowLiveTime, showLiveErrors, setShowLiveErrors,
+    caretStyle, setCaretStyle, fontSize, setFontSize,
+  } = useGameStore();
+
+  const liveStatValues = {
+    showLiveWpm, setShowLiveWpm,
+    showLiveAccuracy, setShowLiveAccuracy,
+    showLiveTime, setShowLiveTime,
+    showLiveErrors, setShowLiveErrors,
+  };
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', onKeyDown);
+
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.15 }}
+      initial="hidden"
+      animate="visible"
+      exit="hidden"
       style={{
         position: 'fixed',
         inset: 0,
-        background: 'rgba(0,0,0,0.45)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
         zIndex: 100,
+        pointerEvents: 'none',
       }}
-      onClick={onClose}
     >
       <motion.div
-        initial={{ opacity: 0, y: 6 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 6 }}
-        transition={{ duration: 0.15 }}
-        onClick={(e) => e.stopPropagation()}
+        variants={backdropVariants}
+        transition={{ duration: 0.2 }}
+        onClick={onClose}
         style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'rgba(0,0,0,0.35)',
+          pointerEvents: 'auto',
+        }}
+      />
+      <motion.aside
+        role="dialog"
+        aria-modal="true"
+        aria-label="settings"
+        variants={drawerVariants}
+        transition={{ type: 'spring', damping: 32, stiffness: 340 }}
+        style={{
+          position: 'absolute',
+          top: 0,
+          right: 0,
+          bottom: 0,
+          width: 'min(400px, 100%)',
           background: 'var(--bg)',
-          borderRadius: '0.5rem',
-          padding: '1.5rem',
-          maxWidth: '480px',
-          width: '92%',
-          maxHeight: '90dvh',
-          overflowY: 'auto',
-          boxShadow: '0 8px 40px rgba(0,0,0,0.28)',
-          border: '1px solid var(--sub-alt)',
+          borderLeft: '1px solid var(--sub-alt)',
+          boxShadow: '-12px 0 40px rgba(0,0,0,0.22)',
           display: 'flex',
           flexDirection: 'column',
-          gap: '1.25rem',
+          overflow: 'hidden',
+          pointerEvents: 'auto',
         }}
       >
-        {/* header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        {/* sticky header */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '1.15rem 1.35rem',
+          borderBottom: '1px solid var(--sub-alt)',
+          flexShrink: 0,
+        }}>
           <span style={{
             color: 'var(--text)',
             fontSize: '0.9rem',
@@ -190,12 +328,13 @@ export default function Settings({ isOpen, onClose }) {
           </span>
           <button
             onClick={onClose}
+            aria-label="close settings"
             style={{
               background: 'none',
               border: 'none',
               color: 'var(--sub)',
               cursor: 'pointer',
-              padding: 0,
+              padding: '0.25rem',
               display: 'flex',
               transition: 'color var(--transition)',
             }}
@@ -206,183 +345,109 @@ export default function Settings({ isOpen, onClose }) {
           </button>
         </div>
 
-        {/* divider */}
-        <div style={{ height: '1px', background: 'var(--sub-alt)' }} />
+        {/* scrollable body — most-used first */}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '1.25rem 1.35rem 2rem',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '1.35rem',
+        }}>
 
-        {/* language */}
-        <div>
-          <p style={{
-            color: 'var(--text)',
-            opacity: 0.65,
-            fontSize: '0.65rem',
-            fontFamily: 'var(--font)',
-            letterSpacing: '0.06em',
-            textTransform: 'uppercase',
-            marginBottom: '0.5rem',
-          }}>
-            language
-          </p>
-          <div style={{ display: 'flex', gap: '0.4rem' }}>
-            {LANGUAGES.map((lang) => {
-              const active = language === lang.id;
-              return (
-                <button
-                  key={lang.id}
-                  onClick={() => setLanguage(lang.id)}
-                  style={{
-                    background: active ? 'var(--main)' : 'var(--sub-alt)',
-                    color: active ? 'var(--bg)' : 'var(--text)',
-                    border: 'none',
-                    borderRadius: '4px',
-                    padding: '0.3rem 0.8rem',
-                    fontSize: '0.75rem',
-                    fontFamily: 'var(--font)',
-                    cursor: 'pointer',
-                    transition: 'background 0.12s ease, color 0.12s ease',
-                  }}
-                  onMouseEnter={(e) => { if (!active) e.currentTarget.style.opacity = '0.7'; }}
-                  onMouseLeave={(e) => { if (!active) e.currentTarget.style.opacity = '1'; }}
-                >
-                  {lang.label}
-                </button>
-              );
-            })}
-          </div>
+        {/* 1. Theme — most frequently changed, live preview */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+          <SectionLabel>theme</SectionLabel>
+          <ThemeGroup label="light" themes={LIGHT_THEMES} activeTheme={theme} onSelect={setTheme} />
+          <ThemeGroup label="dark" themes={DARK_THEMES} activeTheme={theme} onSelect={setTheme} />
         </div>
 
-        {/* divider */}
-        <div style={{ height: '1px', background: 'var(--sub-alt)' }} />
+        <Divider />
 
-        {/* mood */}
+        {/* 2. Display — font, caret, live stats */}
         <div>
-          <p style={{
-            color: 'var(--text)',
-            opacity: 0.65,
-            fontSize: '0.65rem',
-            fontFamily: 'var(--font)',
-            letterSpacing: '0.06em',
-            textTransform: 'uppercase',
-            marginBottom: '0.5rem',
-          }}>
-            mood
-          </p>
+          <SectionLabel>display</SectionLabel>
+
+          <SubLabel>font size</SubLabel>
+          <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '0.9rem' }}>
+            {FONT_SIZES.map((f) => (
+              <Chip key={f.id} active={fontSize === f.id} onClick={() => setFontSize(f.id)} title={f.id}>
+                {f.label}
+              </Chip>
+            ))}
+          </div>
+
+          <SubLabel>caret</SubLabel>
+          <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '0.9rem' }}>
+            {CARET_STYLES.map((c) => (
+              <Chip key={c.id} active={caretStyle === c.id} onClick={() => setCaretStyle(c.id)}>
+                {c.label}
+              </Chip>
+            ))}
+          </div>
+
+          <SubLabel>live stats</SubLabel>
           <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
-            {MOODS.map(({ id, label, Icon }) => {
-              const active = mood === id;
+            {LIVE_STATS.map(({ id, label, key, setter }) => {
+              const active = liveStatValues[key];
               return (
-                <button
-                  key={id}
-                  onClick={() => setMood(id)}
-                  title={label}
-                  style={{
-                    background: active ? 'var(--main)' : 'var(--sub-alt)',
-                    color: active ? 'var(--bg)' : 'var(--text)',
-                    border: 'none',
-                    borderRadius: '4px',
-                    padding: '0.3rem 0.7rem',
-                    fontSize: '0.75rem',
-                    fontFamily: 'var(--font)',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.35rem',
-                    transition: 'background 0.12s ease, color 0.12s ease',
-                  }}
-                  onMouseEnter={(e) => { if (!active) e.currentTarget.style.opacity = '0.7'; }}
-                  onMouseLeave={(e) => { if (!active) e.currentTarget.style.opacity = '1'; }}
-                >
-                  <Icon size={13} strokeWidth={1.5} />
+                <Chip key={id} active={active} onClick={() => liveStatValues[setter](!active)}>
                   {label}
-                </button>
+                </Chip>
               );
             })}
           </div>
         </div>
 
-        {/* divider */}
-        <div style={{ height: '1px', background: 'var(--sub-alt)' }} />
+        <Divider />
 
-        {/* difficulty */}
+        {/* 3. Typing — language, mood, difficulty */}
         <div>
-          <p style={{
-            color: 'var(--text)',
-            opacity: 0.65,
-            fontSize: '0.65rem',
-            fontFamily: 'var(--font)',
-            letterSpacing: '0.06em',
-            textTransform: 'uppercase',
-            marginBottom: '0.5rem',
-          }}>
-            difficulty
-          </p>
-          <div style={{ display: 'flex', gap: '0.4rem' }}>
-            {DIFFICULTIES.map((diff) => {
-              const active = difficulty === diff.id;
-              return (
-                <button
-                  key={diff.id}
-                  onClick={() => setDifficulty(diff.id)}
-                  style={{
-                    background: active ? 'var(--main)' : 'var(--sub-alt)',
-                    color: active ? 'var(--bg)' : 'var(--text)',
-                    border: 'none',
-                    borderRadius: '4px',
-                    padding: '0.3rem 0.8rem',
-                    fontSize: '0.75rem',
-                    fontFamily: 'var(--font)',
-                    cursor: 'pointer',
-                    transition: 'background 0.12s ease, color 0.12s ease',
-                  }}
-                  onMouseEnter={(e) => { if (!active) e.currentTarget.style.opacity = '0.7'; }}
-                  onMouseLeave={(e) => { if (!active) e.currentTarget.style.opacity = '1'; }}
-                >
-                  {diff.label}
-                </button>
-              );
-            })}
+          <SectionLabel>typing</SectionLabel>
+
+          <SubLabel>language</SubLabel>
+          <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '0.9rem' }}>
+            {LANGUAGES.map((lang) => (
+              <Chip key={lang.id} active={language === lang.id} onClick={() => setLanguage(lang.id)}>
+                {lang.label}
+              </Chip>
+            ))}
+          </div>
+
+          <SubLabel>mood</SubLabel>
+          <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '0.9rem' }}>
+            {MOODS.map(({ id, label, Icon }) => (
+              <Chip key={id} active={mood === id} onClick={() => setMood(id)} title={label}>
+                <Icon size={13} strokeWidth={1.5} />
+                {label}
+              </Chip>
+            ))}
+          </div>
+
+          <SubLabel>difficulty</SubLabel>
+          <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+            {DIFFICULTIES.map((diff) => (
+              <Chip key={diff.id} active={difficulty === diff.id} onClick={() => setDifficulty(diff.id)}>
+                {diff.label}
+              </Chip>
+            ))}
           </div>
         </div>
 
-        {/* divider */}
-        <div style={{ height: '1px', background: 'var(--sub-alt)' }} />
+        <Divider />
 
-        {/* sound */}
+        {/* 4. Sound */}
         <div>
-          <p style={{
-            color: 'var(--text)',
-            opacity: 0.65,
-            fontSize: '0.65rem',
-            fontFamily: 'var(--font)',
-            letterSpacing: '0.06em',
-            textTransform: 'uppercase',
-            marginBottom: '0.5rem',
-          }}>
-            sound
-          </p>
-          {/* on/off + volume row */}
+          <SectionLabel>sound</SectionLabel>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-            <button
+            <Chip
+              active={soundEnabled}
               onClick={() => setSoundEnabled(!soundEnabled)}
               title={soundEnabled ? 'disable sound' : 'enable sound'}
-              style={{
-                background: soundEnabled ? 'var(--main)' : 'var(--sub-alt)',
-                color: soundEnabled ? 'var(--bg)' : 'var(--text)',
-                border: 'none',
-                borderRadius: '4px',
-                padding: '0.3rem 0.7rem',
-                fontSize: '0.75rem',
-                fontFamily: 'var(--font)',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.35rem',
-                transition: 'background 0.12s ease, color 0.12s ease',
-                flexShrink: 0,
-              }}
             >
               {soundEnabled ? <Volume2 size={13} strokeWidth={1.5} /> : <VolumeX size={13} strokeWidth={1.5} />}
               {soundEnabled ? 'on' : 'off'}
-            </button>
+            </Chip>
             <input
               type="range"
               min={0}
@@ -410,154 +475,96 @@ export default function Settings({ isOpen, onClose }) {
               {Math.round(volume * 100)}%
             </span>
           </div>
-          {/* profile chips */}
-          <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', opacity: soundEnabled ? 1 : 0.3, transition: 'opacity 0.12s ease' }}>
-            {SOUND_PROFILES.map((p) => {
-              const active = soundProfile === p.id;
-              return (
-                <button
-                  key={p.id}
-                  onClick={() => { if (!soundEnabled) return; setSoundProfile(p.id); previewProfile(p.id, volume); }}
-                  style={{
-                    background: active ? 'var(--main)' : 'var(--sub-alt)',
-                    color: active ? 'var(--bg)' : 'var(--text)',
-                    border: 'none',
-                    borderRadius: '4px',
-                    padding: '0.3rem 0.8rem',
-                    fontSize: '0.75rem',
-                    fontFamily: 'var(--font)',
-                    cursor: soundEnabled ? 'pointer' : 'default',
-                    transition: 'background 0.12s ease, color 0.12s ease',
-                  }}
-                  onMouseEnter={(e) => { if (!active && soundEnabled) e.currentTarget.style.opacity = '0.7'; }}
-                  onMouseLeave={(e) => { if (!active) e.currentTarget.style.opacity = '1'; }}
-                >
-                  {p.label}
-                </button>
-              );
-            })}
+          <div style={{
+            display: 'flex',
+            gap: '0.4rem',
+            flexWrap: 'wrap',
+            opacity: soundEnabled ? 1 : 0.3,
+            transition: 'opacity 0.12s ease',
+            pointerEvents: soundEnabled ? 'auto' : 'none',
+          }}>
+            {SOUND_PROFILES.map((p) => (
+              <Chip
+                key={p.id}
+                active={soundProfile === p.id}
+                onClick={() => { setSoundProfile(p.id); previewProfile(p.id, volume); }}
+              >
+                {p.label}
+              </Chip>
+            ))}
           </div>
         </div>
 
-        {/* divider */}
-        <div style={{ height: '1px', background: 'var(--sub-alt)' }} />
+        <Divider />
 
-        {/* idle game */}
+        {/* 5. Extras — least frequently changed */}
         <div>
-          <p style={{
-            color: 'var(--text)',
-            opacity: 0.65,
+          <SectionLabel>extras</SectionLabel>
+
+          <SubLabel>liquid background</SubLabel>
+          <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '0.9rem', alignItems: 'center' }}>
+            <Chip
+              active={fluidEffectEnabled}
+              onClick={() => setFluidEffectEnabled(!fluidEffectEnabled)}
+            >
+              {fluidEffectEnabled ? 'on' : 'off'}
+            </Chip>
+            {['random', 'theme'].map((colorMode) => (
+              <Chip
+                key={colorMode}
+                active={fluidColorMode === colorMode}
+                onClick={() => setFluidColorMode(colorMode)}
+                disabled={!fluidEffectEnabled}
+              >
+                {colorMode}
+              </Chip>
+            ))}
+          </div>
+
+          <SubLabel>idle animation</SubLabel>
+          <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+            {IDLE_GAMES.map((g) => (
+              <Chip
+                key={g.id}
+                active={idleGame === g.id}
+                onClick={() => setIdleGame(idleGame === g.id && g.id !== 'off' ? 'off' : g.id)}
+              >
+                {g.label}
+              </Chip>
+            ))}
+          </div>
+        </div>
+
+        </div>
+
+        {/* version footer */}
+        <div style={{
+          flexShrink: 0,
+          padding: '0.85rem 1.35rem',
+          borderTop: '1px solid var(--sub-alt)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}>
+          <span style={{
+            color: 'var(--sub)',
+            fontSize: '0.65rem',
+            fontFamily: 'var(--font)',
+            letterSpacing: '0.04em',
+          }}>
+            {APP_NAME}
+          </span>
+          <span style={{
+            color: 'var(--sub)',
             fontSize: '0.65rem',
             fontFamily: 'var(--font)',
             letterSpacing: '0.06em',
-            textTransform: 'uppercase',
-            marginBottom: '0.5rem',
+            opacity: 0.85,
           }}>
-            idle animation
-          </p>
-          <div style={{ display: 'flex', gap: '0.4rem' }}>
-            {IDLE_GAMES.map((g) => {
-              const active = idleGame === g.id;
-              return (
-                <button
-                  key={g.id}
-                  onClick={() => setIdleGame(g.id)}
-                  style={{
-                    background: active ? 'var(--main)' : 'var(--sub-alt)',
-                    color: active ? 'var(--bg)' : 'var(--text)',
-                    border: 'none',
-                    borderRadius: '4px',
-                    padding: '0.3rem 0.8rem',
-                    fontSize: '0.75rem',
-                    fontFamily: 'var(--font)',
-                    cursor: 'pointer',
-                    transition: 'background 0.12s ease, color 0.12s ease',
-                  }}
-                  onMouseEnter={(e) => { if (!active) e.currentTarget.style.opacity = '0.7'; }}
-                  onMouseLeave={(e) => { if (!active) e.currentTarget.style.opacity = '1'; }}
-                >
-                  {g.label}
-                </button>
-              );
-            })}
-          </div>
+            v{APP_VERSION}
+          </span>
         </div>
-
-        {/* divider */}
-        <div style={{ height: '1px', background: 'var(--sub-alt)' }} />
-
-        {/* visual effects */}
-        <div>
-          <p style={{
-            color: 'var(--text)',
-            opacity: 0.65,
-            fontSize: '0.65rem',
-            fontFamily: 'var(--font)',
-            letterSpacing: '0.06em',
-            textTransform: 'uppercase',
-            marginBottom: '0.5rem',
-          }}>
-            visual effects
-          </p>
-          <button
-            onClick={() => setFluidEffectEnabled(!fluidEffectEnabled)}
-            aria-pressed={fluidEffectEnabled}
-            style={{
-              background: fluidEffectEnabled ? 'var(--main)' : 'var(--sub-alt)',
-              color: fluidEffectEnabled ? 'var(--bg)' : 'var(--text)',
-              border: 'none',
-              borderRadius: '4px',
-              padding: '0.3rem 0.8rem',
-              fontSize: '0.75rem',
-              fontFamily: 'var(--font)',
-              cursor: 'pointer',
-              transition: 'background 0.12s ease, color 0.12s ease',
-            }}
-          >
-            liquid background {fluidEffectEnabled ? 'on' : 'off'}
-          </button>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.5rem' }}>
-            <span style={{
-              color: 'var(--sub)',
-              fontSize: '0.7rem',
-              fontFamily: 'var(--font)',
-              marginRight: '0.15rem',
-            }}>
-              color
-            </span>
-            {['random', 'theme'].map((colorMode) => {
-              const active = fluidColorMode === colorMode;
-              return (
-                <button
-                  key={colorMode}
-                  onClick={() => setFluidColorMode(colorMode)}
-                  aria-pressed={active}
-                  style={{
-                    background: active ? 'var(--main)' : 'var(--sub-alt)',
-                    color: active ? 'var(--bg)' : 'var(--text)',
-                    border: 'none',
-                    borderRadius: '4px',
-                    padding: '0.3rem 0.8rem',
-                    fontSize: '0.75rem',
-                    fontFamily: 'var(--font)',
-                    cursor: 'pointer',
-                    transition: 'background 0.12s ease, color 0.12s ease',
-                  }}
-                >
-                  {colorMode}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* divider */}
-        <div style={{ height: '1px', background: 'var(--sub-alt)' }} />
-
-        {/* theme groups */}
-        <ThemeGroup label="light" themes={LIGHT_THEMES} activeTheme={theme} onSelect={setTheme} />
-        <ThemeGroup label="dark"  themes={DARK_THEMES}  activeTheme={theme} onSelect={setTheme} />
-      </motion.div>
+      </motion.aside>
     </motion.div>
   );
 }

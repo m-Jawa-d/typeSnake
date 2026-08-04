@@ -6,6 +6,12 @@ import useSound from '../hooks/useSound';
 
 const LINES_VISIBLE = 4;
 
+const FONT_SIZE_PRESETS = {
+  small:  { en: 'clamp(0.95rem, 2.5vw, 1.15rem)', ur: 'clamp(1.05rem, 3vw, 1.35rem)' },
+  medium: { en: 'clamp(1.1rem, 3vw, 1.4rem)',     ur: 'clamp(1.25rem, 3.5vw, 1.6rem)' },
+  large:  { en: 'clamp(1.35rem, 3.5vw, 1.75rem)',  ur: 'clamp(1.45rem, 4vw, 1.9rem)' },
+};
+
 function SnakeOverlay({ containerRef, wordsRef, active }) {
   const canvasRef = useRef(null);
   const stateRef = useRef(null);
@@ -841,7 +847,7 @@ export default function TypingTest({ onFocusChange }) {
   const {
     words, wordIndex, wordStates, typedWords,
     status, mode, timeRemaining, wordOption,
-    language, handleKey,
+    language, handleKey, caretStyle, fontSize,
   } = useGameStore();
 
   const idleGame = useGameStore((s) => s.idleGame);
@@ -854,12 +860,16 @@ export default function TypingTest({ onFocusChange }) {
   const { playCorrect, playIncorrect, playSpace } = useSound();
 
   const [isFocused, setIsFocused] = useState(false);
-  const [caretPos, setCaretPos] = useState({ top: 0, left: 0 });
+  const [caretPos, setCaretPos] = useState({ top: 0, left: 0, blockLeft: 0, width: 10 });
   const [lineHeight, setLineHeight] = useState(0);
   const [scrollLines, setScrollLines] = useState(0);
   const [resolvedIdleGame, setResolvedIdleGame] = useState('snake');
 
-  const isIdleOverlayActive = !isFocused && status === 'idle';
+  const isIdleOverlayActive = !isFocused && status === 'idle' && idleGame !== 'off';
+  const showIdleFocusHint = !isFocused && status === 'idle' && idleGame === 'off';
+  const isUrdu = language === 'urdu';
+  const typeFontSize = FONT_SIZE_PRESETS[fontSize]?.[isUrdu ? 'ur' : 'en'] ?? FONT_SIZE_PRESETS.medium.en;
+  const typeLineHeight = isUrdu ? '2.5' : '1.75';
 
   useEffect(() => {
     if (isIdleOverlayActive) {
@@ -897,7 +907,8 @@ export default function TypingTest({ onFocusChange }) {
     if (!wordsRef.current) return;
     const firstWord = wordsRef.current.querySelector('[data-word]');
     if (firstWord) setLineHeight(firstWord.getBoundingClientRect().height);
-  }, [words]);
+    setScrollLines(0);
+  }, [words, fontSize, language]);
 
   useEffect(() => {
     if (!wordsRef.current) return;
@@ -911,29 +922,35 @@ export default function TypingTest({ onFocusChange }) {
     const typedLen = typedWords[wordIndex]?.length ?? 0;
 
     const isRtl = language === 'urdu';
-    let left, top;
+    let left, top, blockLeft, width;
     if (typedLen < letterEls.length) {
       const el = letterEls[typedLen];
       const r = el.getBoundingClientRect();
       left = (isRtl ? r.right : r.left) - containerRect.left;
+      blockLeft = r.left - containerRect.left;
+      width = Math.max(r.width, 6);
       top = r.top - containerRect.top;
     } else {
       const last = letterEls[letterEls.length - 1];
       if (last) {
         const r = last.getBoundingClientRect();
         left = (isRtl ? r.left : r.right) - containerRect.left;
+        blockLeft = isRtl ? r.left - containerRect.left - r.width : r.right - containerRect.left;
+        width = Math.max(r.width, 6);
         top = r.top - containerRect.top;
       } else {
         left = wordRect.left - containerRect.left;
+        blockLeft = left;
+        width = lineHeight > 0 ? lineHeight * 0.45 : 10;
         top = wordRect.top - containerRect.top;
       }
     }
 
-    setCaretPos({ top, left });
+    setCaretPos({ top, left, blockLeft, width });
     if (lineHeight > 0 && top > lineHeight * 1.8) {
       setScrollLines((prev) => prev + 1);
     }
-  }, [wordIndex, typedWords, wordStates, lineHeight]);
+  }, [wordIndex, typedWords, wordStates, lineHeight, language, caretStyle]);
 
   useEffect(() => {
     const onKeyDown = (e) => {
@@ -1027,6 +1044,34 @@ export default function TypingTest({ onFocusChange }) {
           active={isIdleOverlayActive && resolvedIdleGame === 'matrix'}
         />
 
+        {/* Lightweight focus hint when idle animations are off — CSS only, no canvas/rAF */}
+        {showIdleFocusHint && (
+          <div
+            aria-hidden
+            style={{
+              position: 'absolute',
+              inset: 0,
+              zIndex: 4,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backdropFilter: 'blur(5px)',
+              WebkitBackdropFilter: 'blur(5px)',
+              background: 'color-mix(in srgb, var(--bg) 40%, transparent)',
+              pointerEvents: 'none',
+            }}
+          >
+            <span style={{
+              color: 'var(--sub)',
+              fontSize: '0.85rem',
+              fontFamily: 'var(--font)',
+              letterSpacing: '0.02em',
+            }}>
+              click to focus
+            </span>
+          </div>
+        )}
+
         {/* Scrolling words */}
         <div
           ref={wordsRef}
@@ -1042,7 +1087,9 @@ export default function TypingTest({ onFocusChange }) {
             alignContent: 'flex-start',
             rowGap: '0.5rem',
             columnGap: '0.6em',
-            ...(language === 'urdu' && { fontFamily: "var(--font-urdu, 'Noto Nastaliq Urdu', serif)", fontSize: 'clamp(1.25rem, 3.5vw, 1.6rem)', lineHeight: '2.5' }),
+            ...(isUrdu && { fontFamily: "var(--font-urdu, 'Noto Nastaliq Urdu', serif)" }),
+            fontSize: typeFontSize,
+            lineHeight: typeLineHeight,
           }}
         >
           {words.map((word, wi) => {
@@ -1060,8 +1107,8 @@ export default function TypingTest({ onFocusChange }) {
                 data-word
                 style={{
                   display: 'inline-block',
-                  fontSize: language === 'urdu' ? 'clamp(1.25rem, 3.5vw, 1.6rem)' : 'clamp(1.1rem, 3vw, 1.4rem)',
-                  lineHeight: language === 'urdu' ? '2.5' : '1.75',
+                  fontSize: typeFontSize,
+                  lineHeight: typeLineHeight,
                   borderBottom: hasError ? '1px solid var(--error)' : '1px solid transparent',
                   whiteSpace: 'nowrap',
                 }}
@@ -1090,22 +1137,57 @@ export default function TypingTest({ onFocusChange }) {
           })}
         </div>
 
-        {/* Caret — thin vertical line */}
-        {isFocused && status !== 'finished' && (
-          <div style={{
+        {/* Caret */}
+        {isFocused && status !== 'finished' && (() => {
+          const h = lineHeight > 0 ? lineHeight * 0.75 : 22;
+          const w = Math.max(caretPos.width || 10, 8);
+          const shared = {
             position: 'absolute',
-            top: caretPos.top + 2,
-            left: caretPos.left,
-            width: '2px',
-            height: lineHeight > 0 ? `${lineHeight * 0.75}px` : '1.4rem',
-            background: 'var(--main)',
-            borderRadius: '1px',
             zIndex: 3,
             pointerEvents: 'none',
-            transition: 'left 0.08s ease, top 0.08s ease',
+            transition: 'left 0.08s ease, top 0.08s ease, width 0.08s ease',
             animation: status === 'idle' ? 'caretFlash 1s ease infinite' : 'none',
-          }} />
-        )}
+            background: 'var(--main)',
+          };
+
+          if (caretStyle === 'block') {
+            return (
+              <div style={{
+                ...shared,
+                top: caretPos.top + 2,
+                left: caretPos.blockLeft,
+                width: w,
+                height: h,
+                opacity: 0.35,
+                borderRadius: '2px',
+              }} />
+            );
+          }
+
+          if (caretStyle === 'underline') {
+            return (
+              <div style={{
+                ...shared,
+                top: caretPos.top + (lineHeight > 0 ? lineHeight * 0.82 : h),
+                left: caretPos.blockLeft,
+                width: w,
+                height: '3px',
+                borderRadius: '1px',
+              }} />
+            );
+          }
+
+          return (
+            <div style={{
+              ...shared,
+              top: caretPos.top + 2,
+              left: caretPos.left,
+              width: '2px',
+              height: h,
+              borderRadius: '1px',
+            }} />
+          );
+        })()}
 
         <input
           ref={hiddenInputRef}

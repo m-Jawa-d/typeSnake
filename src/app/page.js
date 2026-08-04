@@ -16,7 +16,7 @@ import RaceResults from '../components/RaceResults';
 import SplashScreen from '../components/SplashScreen';
 import FluidBackground from '../components/FluidBackground';
 
-const DARK_THEMES = ['carbon', 'mocha', 'forest', 'slate', 'graphite'];
+const DARK_THEMES = ['carbon', 'mocha', 'forest', 'venom'];
 
 function updateFavicon(theme) {
   const accent = getComputedStyle(document.documentElement)
@@ -67,7 +67,7 @@ function updateFavicon(theme) {
 }
 
 export default function Home() {
-  const { status, initTest, theme, setTheme, soundProfile, fluidEffectEnabled, fluidColorMode, wpm, accuracy, timeRemaining, incorrectChars, mode, wordOption, wordIndex, words } = useGameStore();
+  const { status, initTest, theme, setTheme, soundProfile, fluidEffectEnabled, fluidColorMode, wpm, accuracy, timeRemaining, incorrectChars, mode, wordOption, wordIndex, words, showLiveWpm, showLiveAccuracy, showLiveTime, showLiveErrors } = useGameStore();
   const { mpStatus, startRace } = useMultiplayerStore();
   const [focused, setFocused] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -89,7 +89,7 @@ export default function Home() {
   const handleFocusChange = useCallback((f) => setFocused(f), []);
 
   const toggleTheme = () => {
-    setTheme(isDark ? 'zinc' : 'carbon');
+    setTheme(isDark ? 'mist' : 'carbon');
   };
 
   const navFade = focused && status === 'active';
@@ -333,26 +333,28 @@ export default function Home() {
                   : mode === 'words'
                   ? `${wordIndex} / ${wordOption}`
                   : `${wordIndex} / ${words.length}`;
+                const stats = [
+                  showLiveWpm && { label: 'WPM', value: wpm },
+                  showLiveAccuracy && { label: 'Accuracy', value: `${accuracy}%` },
+                  showLiveTime && { label: 'Time', value: timeDisplay },
+                  showLiveErrors && { label: 'Errors', value: incorrectChars },
+                ].filter(Boolean);
+                if (stats.length === 0) return null;
                 return (
                   <div className="stats-grid" style={{
                     width: '100%',
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(4, 1fr)',
+                    gridTemplateColumns: `repeat(${stats.length}, 1fr)`,
                     marginTop: '1.5rem',
                     userSelect: 'none',
                   }}>
-                    {[
-                      { label: 'WPM', value: wpm },
-                      { label: 'Accuracy', value: `${accuracy}%` },
-                      { label: 'Time', value: timeDisplay },
-                      { label: 'Errors', value: incorrectChars },
-                    ].map(({ label, value }, i, arr) => (
+                    {stats.map(({ label, value }, i) => (
                       <div key={label} style={{
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
                         padding: '1rem 0',
-                        borderRight: i < arr.length - 1 ? '1px solid var(--sub-alt)' : 'none',
+                        borderRight: i < stats.length - 1 ? '1px solid var(--sub-alt)' : 'none',
                       }}>
                         <span style={{ color: 'var(--sub)', fontSize: '0.7rem', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '0.4rem' }}>
                           {label}
@@ -446,7 +448,11 @@ export default function Home() {
 
       <AnimatePresence>
         {settingsOpen && (
-          <SettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
+          <SettingsModal
+            key="settings-drawer"
+            isOpen={settingsOpen}
+            onClose={() => setSettingsOpen(false)}
+          />
         )}
       </AnimatePresence>
 

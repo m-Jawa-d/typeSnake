@@ -4,16 +4,13 @@ import { useEffect, useRef } from 'react';
 import createFluidSimulation from '../lib/fluidSimulation';
 
 const THEME_ACCENTS = {
-  paper: '#c0392b',
-  ivory: '#8a6e3e',
-  zinc: '#3f3f46',
-  rose: '#c9184a',
-  sky: '#0369a1',
-  carbon: '#e2b714',
-  mocha: '#cba6f7',
-  forest: '#a3be8c',
-  slate: '#38bdf8',
-  graphite: '#ff9f0a',
+  paper: '#b54a3a',
+  ivory: '#9a7b4f',
+  mist: '#4a6670',
+  carbon: '#d4af37',
+  mocha: '#b8a0e0',
+  forest: '#8fbc8a',
+  venom: '#4ecf8a',
 };
 
 function hexToRgb(hex) {

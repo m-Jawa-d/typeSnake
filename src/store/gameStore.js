@@ -282,9 +282,20 @@ const useGameStore = create((set, get) => ({
     return stored === 'urdu' ? 'urdu' : 'english';
   })(),
   theme: (() => {
-    const VALID = ['paper','ivory','zinc','rose','sky','carbon','mocha','forest','slate','graphite'];
+    const VALID = ['paper', 'ivory', 'mist', 'carbon', 'mocha', 'forest', 'venom'];
+    const ALIASES = {
+      zinc: 'mist',
+      rose: 'paper',
+      sky: 'mist',
+      slate: 'carbon',
+      graphite: 'carbon',
+    };
     const stored = typeof window !== 'undefined' ? localStorage.getItem('theme') : null;
-    return VALID.includes(stored) ? stored : 'paper';
+    const resolved = ALIASES[stored] || stored;
+    if (ALIASES[stored] && typeof window !== 'undefined') {
+      localStorage.setItem('theme', resolved);
+    }
+    return VALID.includes(resolved) ? resolved : 'paper';
   })(),
   soundEnabled: (() => {
     if (typeof window === 'undefined') return true;
@@ -312,9 +323,39 @@ const useGameStore = create((set, get) => ({
     return VALID.includes(s) ? s : 'click';
   })(),
   idleGame: (() => {
-    const VALID = ['snake', 'pacman', 'matrix', 'random'];
+    const VALID = ['off', 'snake', 'pacman', 'matrix', 'random'];
     const s = typeof window !== 'undefined' ? localStorage.getItem('idleGame') : null;
     return VALID.includes(s) ? s : 'snake';
+  })(),
+  showLiveWpm: (() => {
+    if (typeof window === 'undefined') return true;
+    const s = localStorage.getItem('showLiveWpm');
+    return s === null ? true : s === 'true';
+  })(),
+  showLiveAccuracy: (() => {
+    if (typeof window === 'undefined') return true;
+    const s = localStorage.getItem('showLiveAccuracy');
+    return s === null ? true : s === 'true';
+  })(),
+  showLiveTime: (() => {
+    if (typeof window === 'undefined') return true;
+    const s = localStorage.getItem('showLiveTime');
+    return s === null ? true : s === 'true';
+  })(),
+  showLiveErrors: (() => {
+    if (typeof window === 'undefined') return true;
+    const s = localStorage.getItem('showLiveErrors');
+    return s === null ? true : s === 'true';
+  })(),
+  caretStyle: (() => {
+    const VALID = ['line', 'block', 'underline'];
+    const s = typeof window !== 'undefined' ? localStorage.getItem('caretStyle') : null;
+    return VALID.includes(s) ? s : 'line';
+  })(),
+  fontSize: (() => {
+    const VALID = ['small', 'medium', 'large'];
+    const s = typeof window !== 'undefined' ? localStorage.getItem('fontSize') : null;
+    return VALID.includes(s) ? s : 'medium';
   })(),
 
   // History
@@ -405,6 +446,36 @@ const useGameStore = create((set, get) => ({
   setIdleGame: (idleGame) => {
     if (typeof window !== 'undefined') localStorage.setItem('idleGame', idleGame);
     set({ idleGame });
+  },
+
+  setShowLiveWpm: (showLiveWpm) => {
+    if (typeof window !== 'undefined') localStorage.setItem('showLiveWpm', String(showLiveWpm));
+    set({ showLiveWpm });
+  },
+
+  setShowLiveAccuracy: (showLiveAccuracy) => {
+    if (typeof window !== 'undefined') localStorage.setItem('showLiveAccuracy', String(showLiveAccuracy));
+    set({ showLiveAccuracy });
+  },
+
+  setShowLiveTime: (showLiveTime) => {
+    if (typeof window !== 'undefined') localStorage.setItem('showLiveTime', String(showLiveTime));
+    set({ showLiveTime });
+  },
+
+  setShowLiveErrors: (showLiveErrors) => {
+    if (typeof window !== 'undefined') localStorage.setItem('showLiveErrors', String(showLiveErrors));
+    set({ showLiveErrors });
+  },
+
+  setCaretStyle: (caretStyle) => {
+    if (typeof window !== 'undefined') localStorage.setItem('caretStyle', caretStyle);
+    set({ caretStyle });
+  },
+
+  setFontSize: (fontSize) => {
+    if (typeof window !== 'undefined') localStorage.setItem('fontSize', fontSize);
+    set({ fontSize });
   },
 
   setLanguage: (language) => {
